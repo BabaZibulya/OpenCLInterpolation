@@ -68,3 +68,9 @@ const char *clErrorString(int errorCode)
     }
 }
 
+void checkForCLError(int errCode)
+{
+    if (errCode != CL_SUCCESS) {
+        throw std::runtime_error(clErrorString(errCode));
+    }
+}

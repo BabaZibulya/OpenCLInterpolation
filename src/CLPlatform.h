@@ -3,12 +3,10 @@
 #include <string>
 #include <ostream>
 
+#include "CLTypes.h"
+
 class CLPlatform
 {
-public:
-    static std::vector<CLPlatform> getAllAvailableCLPlatforms();
-    static std::size_t numberOfAvailablePlatforms();
-
 public:
     /*
     #define CL_PLATFORM_PROFILE                         0x0900
@@ -25,7 +23,6 @@ public:
     PlatformInfo getPlatformInfo();
     std::string getPlatformInfoDetail(unsigned int detailInd);
 
-    typedef struct _cl_platform_id *cl_platform_id;
     const cl_platform_id platformId;
 private:
     explicit CLPlatform(cl_platform_id platformId);

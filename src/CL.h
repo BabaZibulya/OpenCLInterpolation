@@ -5,16 +5,16 @@
 #endif
 
 #include <iostream>
+#include <exception>
 
+// Utility function and macros
 const char *clErrorString(int errorCode);
+void checkForCLError(int error);
 
 #ifdef CL_DEBUG
 #define CL(command) \
-    {\
-        auto result = command;\
-        if (result != CL_SUCCESS) {\
-            std::cout << "OpenCL error : " << clErrorString(result) << '\n';\
-        }\
+    if (auto result = command; result != CL_SUCCESS) {\
+        std::cout << "OpenCL error : " << clErrorString(result) << '\n';\
     }
 #else
 #define CL(command) command

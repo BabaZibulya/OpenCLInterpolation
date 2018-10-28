@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.12.3)
+cmake_minimum_required(VERSION 3.10)
 
 project(OpenCLSandbox)
 
@@ -9,10 +9,16 @@ set (CMAKE_CXX_STANDARD 17)
 set (PROJECT_SRC "./main.cpp"
                  "./src/CL.cpp"
                  "./src/CLPlatform.cpp"
-                 "./src/CLDevice.cpp")
+                 "./src/CLDevice.cpp"
+                 "./src/CLContext.cpp"
+                 "./src/CLCommandQueue.cpp"
+                 "./src/CLProgram.cpp"
+                 "./src/CLUtils.cpp")
 
 include_directories("./src"
                     $ENV{INTELOPENCLSDK}/include)
+
+add_definitions( "-Wall -lstdc++fs" )
 
 add_compile_options("$<$<CONFIG:DEBUG>:-DCL_DEBUG>")
 

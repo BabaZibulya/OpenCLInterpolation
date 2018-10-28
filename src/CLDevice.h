@@ -3,6 +3,7 @@
 #include <vector>
 
 #include "CLPlatform.h"
+#include "CLTypes.h"
 
 class CLDevice
 {
@@ -24,7 +25,6 @@ public:
         All         = 0xFFFFFFFF
     };
 
-    typedef struct _cl_device_id *cl_device_id;
     const cl_device_id deviceId;
 
     static std::vector<CLDevice> getAllAvailableCLDevices(
@@ -36,18 +36,18 @@ public:
             DeviceType deviceType = DeviceType::All);
 
     template<typename OutputType, typename = std::enable_if_t<std::is_scalar<OutputType>::value>>
-    OutputType getDeviceInfoDetail(unsigned int detailInd)
+    OutputType getDeviceInfoDetail(unsigned int detailInd) const
     {
         OutputType result;
         getDeviceInfoDetail(detailInd, sizeof(OutputType), &result);
         return result;
     }
 
-    std::string getDeviceInfoDetail(unsigned int detailInd);
+    std::string getDeviceInfoDetail(unsigned int detailInd) const;
 
 private:
     CLDevice(cl_device_id deviceId);
 
-    std::size_t getDeviceInfoDetailSize(unsigned int detailInd);
-    void getDeviceInfoDetail(unsigned int detailInd, std::size_t sizeOfOutput, void *output);
+    std::size_t getDeviceInfoDetailSize(unsigned int detailInd) const;
+    void getDeviceInfoDetail(unsigned int detailInd, std::size_t sizeOfOutput, void *output) const;
 };
