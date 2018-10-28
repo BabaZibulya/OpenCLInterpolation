@@ -5,8 +5,7 @@
 
 #include "CL.h"
 
-CLPlatform::CLPlatform(cl_platform_id platformId, const PlatformInfo& platformInfo) :
-    platformInfo(platformInfo),
+CLPlatform::CLPlatform(cl_platform_id platformId) :
     platformId(platformId)
 {}
 
@@ -31,9 +30,19 @@ CLPlatform::PlatformInfo getPlatformInfo(cl_platform_id platformId)
     };
 }
 
+CLPlatform::PlatformInfo CLPlatform::getPlatformInfo()
+{
+    return ::getPlatformInfo(platformId);
+}
+
+std::string CLPlatform::getPlatformInfoDetail(unsigned int detailInd)
+{
+    return ::getPlatformInfoDetail(platformId, detailInd);
+}
+
 CLPlatform platformFromId(cl_platform_id platformId)
 {
-    return CLPlatform(platformId, getPlatformInfo(platformId));
+    return CLPlatform(platformId);
 }
 
 std::vector<CLPlatform> CLPlatform::getAllAvailableCLPlatforms()
@@ -51,9 +60,9 @@ std::vector<CLPlatform> CLPlatform::getAllAvailableCLPlatforms()
 
 std::size_t CLPlatform::numberOfAvailablePlatforms()
 {
-    cl_uint num_platforms;
-    CL(clGetPlatformIDs(0, nullptr, &num_platforms));
-    return num_platforms;
+    cl_uint numPlatforms;
+    CL(clGetPlatformIDs(0, nullptr, &numPlatforms));
+    return numPlatforms;
 }
 
 std::ostream& operator<< (std::ostream& ostream, const CLPlatform::PlatformInfo& platformInfo)

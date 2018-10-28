@@ -22,11 +22,12 @@ public:
         PlatformInfo() = delete;
         friend std::ostream& operator<< (std::ostream& ostream, const PlatformInfo& platformInfo);
     };
-    const PlatformInfo platformInfo;
+    PlatformInfo getPlatformInfo();
+    std::string getPlatformInfoDetail(unsigned int detailInd);
 
     typedef struct _cl_platform_id *cl_platform_id;
     const cl_platform_id platformId;
 private:
-    CLPlatform(cl_platform_id platformId, const PlatformInfo& platformInfo);
+    explicit CLPlatform(cl_platform_id platformId);
     friend CLPlatform platformFromId(cl_platform_id platformId);
 };
