@@ -13,8 +13,18 @@
 #include "CLProgram.h"
 #include "CLUtils.h"
 
+#include "NDimContiniousArray.h"
+
 size_t lengthOfArr = 10000;
 size_t sizeOfArr = lengthOfArr * sizeof(float);
+
+FourDimContiniousArray<float, 2, 2, 2, 2> test() {
+    FourDimContiniousArray<float, 2, 2, 2, 2> array1;
+    for (unsigned i = 0; i < 2; ++i) {
+        array1.at(i, 0, 0, 0) = i;
+    }
+    return array1;
+}
 
 std::unique_ptr<float[]> bufferA() {
     auto p = std::make_unique<float[]>(lengthOfArr);
@@ -23,7 +33,6 @@ std::unique_ptr<float[]> bufferA() {
     }
     return p;
 }
-
 
 std::unique_ptr<float[]> bufferB() {
     auto p = std::make_unique<float[]>(lengthOfArr);
@@ -78,6 +87,8 @@ int main() {
         std::cout << e.what();
         return -1;
     }
+
+    test();
 
     return 0;
 }
