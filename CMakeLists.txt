@@ -13,7 +13,8 @@ set (PROJECT_SRC "./main.cpp"
                  "./src/CLContext.cpp"
                  "./src/CLCommandQueue.cpp"
                  "./src/CLProgram.cpp"
-                 "./src/CLUtils.cpp")
+                 "./src/CLUtils.cpp"
+                 "./src/CLBuffer.cpp")
 
 include_directories("./src"
                     $ENV{INTELOPENCLSDK}/include)

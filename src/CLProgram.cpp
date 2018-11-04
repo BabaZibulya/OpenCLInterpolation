@@ -62,3 +62,31 @@ std::string CLProgram::compilationLog(const CLDevice& device)
     clGetProgramBuildInfo(program, device.deviceId, CL_PROGRAM_BUILD_LOG, compilationLogSize, &log[0], nullptr);
     return log;
 }
+
+
+CLProgram::CLKernel::CLKernel(const CLProgram& program, const std::string& kernelName)
+{
+    cl_int err;
+    kernel = clCreateKernel(program.program, kernelName.c_str(), &err);
+    checkForCLError(err);
+}
+
+CLProgram::CLKernel::~CLKernel()
+{
+    clReleaseKernel(kernel);
+}
+
+void CLProgram::CLKernel::setKernelArg(size_t argPosition, const CLBuffer& buffer)
+{
+    setKernelArg(argPosition, sizeof(buffer.buffer), const_cast<cl_mem*>(&(buffer.buffer)));
+}
+
+void CLProgram::CLKernel::setKernelArg(size_t argPosition, size_t size, void* arg)
+{
+    CL(clSetKernelArg(kernel, argPosition, size, arg));
+}
+
+CLProgram::CLKernel CLProgram::createKernel(const std::string& kernelName)
+{
+    return CLKernel(*this, kernelName);
+}
