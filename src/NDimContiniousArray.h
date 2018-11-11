@@ -1,60 +1,6 @@
 #pragma once
 
-#include <type_traits>
-#include <initializer_list>
 #include <functional>
-
-template<unsigned size, unsigned dimSizeFirst, unsigned... others>
-struct ArraySize
-{
-    static const size_t value = ArraySize<size * dimSizeFirst, others...>::value;
-};
-
-template<unsigned size, unsigned dimLast>
-struct ArraySize<size, dimLast>
-{
-    static const size_t value = size * dimLast;
-};
-
-template<unsigned n, unsigned dimSizeFirst, unsigned... others>
-struct nthDimension
-{
-    static const unsigned value = nthDimension<n - 1, others...>::value;
-};
-
-template<unsigned dimSizeFirst, unsigned... others>
-struct nthDimension<0, dimSizeFirst, others...>
-{
-    static const unsigned value = dimSizeFirst;
-};
-
-template<unsigned dimSizeFirst, unsigned... others>
-struct Dimensions : public Dimensions<others...>
-{
-    template<unsigned n, typename std::enable_if<(n > 0)>::type* = nullptr>
-    static unsigned get()
-    {
-        return Dimensions<others...>::template get<n - 1>();
-    }
-    
-    template<unsigned n, typename std::enable_if<n == 0>::type* = nullptr>
-    static unsigned get()
-    {
-        return dimSizeFirst;
-    }
-};
-
-template<unsigned last>
-struct Dimensions<last>
-{
-    template<unsigned n>
-    static unsigned get()
-    {
-        static_assert(n == 0, "Index is larger than dimensions list");
-        return last;
-    }
-};
-
 
 template<typename T>
 class OneDimContiniousArray
@@ -68,8 +14,8 @@ public:
         return data[ind];
     }
 
-    void fill(std::function<T(unsigned)> f) {
-        for (unsigned i = 0; i < size; ++i) {
+    void fill(std::function<T(size_t)> f) {
+        for (size_t i = 0; i < size; ++i) {
             data[i] = f(i);
         }
     }
@@ -104,9 +50,9 @@ public:
         return data[indFirst + dimSizeFirst * indSecond];
     }
 
-    void fill(std::function<T(unsigned, unsigned)> f) {
-        for (int j = 0; j < dimSizeFirst; j++)
-            for (int i = 0; i < dimSizeSecond; i++) {
+    void fill(std::function<T(size_t, size_t)> f) {
+        for (size_t j = 0; j < dimSizeFirst; j++)
+            for (size_t i = 0; i < dimSizeSecond; i++) {
                 at(j, i) = f(j, i);
             }
     }
@@ -127,10 +73,10 @@ template<typename T>
 class FourDimContiniousArray
 {
 public:
-    FourDimContiniousArray(unsigned dimSizeFirst,
-                           unsigned dimSizeSecond,
-                           unsigned dimSizeThird,
-                           unsigned dimSizeFourth) :
+    FourDimContiniousArray(size_t dimSizeFirst,
+                           size_t dimSizeSecond,
+                           size_t dimSizeThird,
+                           size_t dimSizeFourth) :
                            dimSizeFirst(dimSizeFirst),
                            dimSizeSecond(dimSizeSecond),
                            dimSizeThird(dimSizeThird),
@@ -141,10 +87,10 @@ public:
     }
 
     T& at(
-        unsigned dimFirst,
-        unsigned dimSecond,
-        unsigned dimThird,
-        unsigned dimFourth
+        size_t dimFirst,
+        size_t dimSecond,
+        size_t dimThird,
+        size_t dimFourth
     ) {
         size_t offset = dimFirst + dimSizeFirst * dimSecond +
             dimSizeFirst * dimSizeSecond * dimThird +
@@ -161,23 +107,23 @@ public:
         return numberOfElements * sizeof(float);
     }
 
-    unsigned getDimSizeFirst() {
+    size_t getDimSizeFirst() {
         return dimSizeFirst; 
     }
 
-    unsigned getDimSizeSecond() {
+    size_t getDimSizeSecond() {
         return dimSizeSecond; 
     }
 
-    unsigned getDimSizeThird() {
+    size_t getDimSizeThird() {
         return dimSizeThird; 
     }
 
-    unsigned getDimSizeFourth() {
+    size_t getDimSizeFourth() {
         return dimSizeFourth; 
     }
 
-    void fill(std::function<T(unsigned, unsigned, unsigned, unsigned)> fillFunc) {
+    void fill(std::function<T(size_t, size_t, size_t, size_t)> fillFunc) {
         for (size_t h = 0; h < dimSizeFirst; h++)
             for (size_t k = 0; k < dimSizeSecond; k++)
                 for (size_t j = 0; j < dimSizeThird; j++)

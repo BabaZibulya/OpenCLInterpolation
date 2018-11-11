@@ -25,6 +25,11 @@ public:
         size_t workDim,
         const std::vector<size_t>& globalSize,
         const std::vector<size_t>& localWorkSize);
+    void enqueueNDRangeKernel(
+        const CLProgram::CLKernel& kernel,
+        size_t workDim,
+        const std::vector<size_t>& globalSize
+    );
 
     void finish();
 public:

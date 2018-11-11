@@ -44,6 +44,17 @@ void CLCommandQueue::enqueueNDRangeKernel(
     CL(clEnqueueNDRangeKernel(commandQueue, kernel.kernel, workDim, nullptr, &globalSize[0], &localWorkSize[0], 0, nullptr, nullptr));
 }
 
+void CLCommandQueue::enqueueNDRangeKernel(
+    const CLProgram::CLKernel& kernel,
+    size_t workDim,
+    const std::vector<size_t>& globalSize)
+{
+    if (globalSize.size() != workDim) {
+        throw std::runtime_error("Wrong dimensions of global or local work size");
+    }
+    CL(clEnqueueNDRangeKernel(commandQueue, kernel.kernel, workDim, nullptr, &globalSize[0], nullptr, 0, nullptr, nullptr));
+}
+
 void CLCommandQueue::finish()
 {
     clFinish(commandQueue);

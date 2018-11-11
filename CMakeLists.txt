@@ -19,7 +19,7 @@ set (PROJECT_SRC "./main.cpp"
 
 include_directories("./src")
 
-add_definitions( "-Wall -lstdc++fs" )
+add_definitions( "-Wall -Werror -lstdc++fs" )
 
 add_compile_options("$<$<CONFIG:DEBUG>:-DCL_DEBUG>")
 

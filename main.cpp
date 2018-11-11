@@ -18,9 +18,34 @@
 
 #include "InterpolationUtils.h"
 
-unsigned Pk = 40, Lmz = 101, Mmz = 102, Nmz = 103;
+void measureTime(const std::string& message, const std::function<void()>& f)
+{
+    std::chrono::time_point<std::chrono::system_clock> start, end;
+    start = std::chrono::system_clock::now();
 
-int main() {
+    f();
+
+    end = std::chrono::system_clock::now();
+    int elapsed_milliseconds = std::chrono::duration_cast<std::chrono::milliseconds>
+                             (end-start).count();
+ 
+    std::cout << message << " - execution time: " << elapsed_milliseconds << "ms\n";
+}
+
+int main(int argc, char ** argv) {
+
+    unsigned Pk = 40, Lmz = 101, Mmz = 102, Nmz = 103;
+    if (argc == 5) {
+        Pk = std::stol(argv[1]);
+        Lmz = std::stol(argv[2]);
+        Mmz = std::stol(argv[3]);
+        Nmz = std::stol(argv[4]);
+    }
+    else {
+        std::cerr << "Wrong usage. Please provide 4 arguments, or run witout parameters\n";
+        return -1;
+    }
+
     auto platforms = getAllAvailableCLPlatforms();
 
     std::vector<CLDevice> devices = CLDevice::getAllAvailableCLDevices(platforms[0]);
@@ -51,14 +76,15 @@ int main() {
         CLBuffer F_XBuffer(context, CLBuffer::BufferType::CL_MEM_READ_ONLY, F_X.getRawSize());
         CLBuffer ZmzBuffer(context, CLBuffer::BufferType::CL_MEM_READ_ONLY, Zmz.getRawSize());
 
-        commandQueue.enqueueWriteBuffer(USBuffer, US.getRawSize(), US.getData());
-        commandQueue.enqueueWriteBuffer(VSBuffer, VS.getRawSize(), VS.getData());
-        commandQueue.enqueueWriteBuffer(HSBuffer, HS.getRawSize(), HS.getData());
-        commandQueue.enqueueWriteBuffer(QSBuffer, QS.getRawSize(), QS.getData());
-        commandQueue.enqueueWriteBuffer(TSBuffer, TS.getRawSize(), TS.getData());
-        commandQueue.enqueueWriteBuffer(F_XBuffer, F_X.getRawSize(), F_X.getData());
-        commandQueue.enqueueWriteBuffer(ZmzBuffer, Zmz.getRawSize(), Zmz.getData());
-
+        measureTime("OpenCL writing inputs ", [&](){
+            commandQueue.enqueueWriteBuffer(USBuffer, US.getRawSize(), US.getData());
+            commandQueue.enqueueWriteBuffer(VSBuffer, VS.getRawSize(), VS.getData());
+            commandQueue.enqueueWriteBuffer(HSBuffer, HS.getRawSize(), HS.getData());
+            commandQueue.enqueueWriteBuffer(QSBuffer, QS.getRawSize(), QS.getData());
+            commandQueue.enqueueWriteBuffer(TSBuffer, TS.getRawSize(), TS.getData());
+            commandQueue.enqueueWriteBuffer(F_XBuffer, F_X.getRawSize(), F_X.getData());
+            commandQueue.enqueueWriteBuffer(ZmzBuffer, Zmz.getRawSize(), Zmz.getData());
+        });
         /*
             __global float *US,
             __global float *VS,
@@ -87,25 +113,29 @@ int main() {
         kernel.setKernelArg(10, Mmz);
         kernel.setKernelArg(11, Nmz);
 
-        size_t localSize = 64;
-        std::chrono::time_point<std::chrono::system_clock> start, end;
-        start = std::chrono::system_clock::now();
-        commandQueue.enqueueNDRangeKernel(
-            kernel, 3,
-            {Pk, Lmz, Mmz},
-            {1, 1, 1});
+        measureTime("OpenCL ", [&]() {
+            commandQueue.enqueueNDRangeKernel(
+                kernel, 3,
+                {Pk, Lmz, Mmz});
 
-        commandQueue.finish();
-        end = std::chrono::system_clock::now();
-        int elapsed_milliseconds = std::chrono::duration_cast<std::chrono::milliseconds>
-                             (end-start).count();
- 
-        std::cout << "Execution time: " << elapsed_milliseconds << "ms\n";
+            commandQueue.finish();
+        });
 
-        commandQueue.enqueueReadBuffer(QcBuffer, Qc.getRawSize(), Qc.getData());
-        for (int i = 0; i < 10; i++) {
-            std::cout << Qc.at(i, 0, 0, 0) << std::endl;
-        }
+        measureTime("OpenCL reading results ", [&](){
+            commandQueue.enqueueReadBuffer(QcBuffer, Qc.getRawSize(), Qc.getData());
+        });
+
+        double sum = 0.0;
+
+        for(size_t h = 0; h < Pk; h++)
+            for(size_t k = 0; k < Lmz; k++)
+                for(size_t j = 0; j < Mmz; j++)
+                    for(size_t i = 0; i < Nmz; i++) {
+                        sum += Qc.at(h, k, j, i);
+                    }
+
+        std::cout << "Mean ==" << sum / ((double) Pk * Lmz * Mmz * Nmz) << "\n";
+
     }
     catch (std::exception& e) {
         std::cout << e.what();
