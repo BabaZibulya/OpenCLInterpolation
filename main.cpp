@@ -4,6 +4,7 @@
 #include <memory>
 #include <cmath>
 #include <memory>
+#include <chrono>
 
 #include "CLPlatform.h"
 #include "CLBuffer.h"
@@ -15,36 +16,9 @@
 
 #include "NDimContiniousArray.h"
 
-size_t lengthOfArr = 10000;
-size_t sizeOfArr = lengthOfArr * sizeof(float);
+#include "InterpolationUtils.h"
 
-FourDimContiniousArray<float, 2, 2, 2, 2> test() {
-    FourDimContiniousArray<float, 2, 2, 2, 2> array1;
-    for (unsigned i = 0; i < 2; ++i) {
-        array1.at(i, 0, 0, 0) = i;
-    }
-    return array1;
-}
-
-std::unique_ptr<float[]> bufferA() {
-    auto p = std::make_unique<float[]>(lengthOfArr);
-    for (size_t i = 0; i < lengthOfArr; ++i) {
-        p[i] = static_cast<float>(i);
-    }
-    return p;
-}
-
-std::unique_ptr<float[]> bufferB() {
-    auto p = std::make_unique<float[]>(lengthOfArr);
-    for (size_t i = 0; i < lengthOfArr; ++i) {
-        p[i] = -static_cast<float>(i);
-    }
-    return p;
-}
-
-std::unique_ptr<float[]> bufferC() {
-    return std::make_unique<float[]>(lengthOfArr);
-}
+unsigned Pk = 40, Lmz = 101, Mmz = 102, Nmz = 103;
 
 int main() {
     auto platforms = getAllAvailableCLPlatforms();
@@ -53,42 +27,90 @@ int main() {
     CLContext context(devices);
     CLCommandQueue commandQueue(context, devices[0]);
     try {
-        CLProgram program = CLProgram::compileSources(context, devices, {"kernels/vecAdd.cl"});
-        CLProgram::CLKernel kernel = program.createKernel("vecAdd");
+        CLProgram program = CLProgram::compileSources(context, devices, {"kernels/interpol.cl"});
+        CLProgram::CLKernel kernel = program.createKernel("interpol");
 
-        CLBuffer a(context, CLBuffer::BufferType::CL_MEM_READ_ONLY, sizeOfArr);
-        CLBuffer b(context, CLBuffer::BufferType::CL_MEM_READ_ONLY, sizeOfArr);
-        CLBuffer c(context, CLBuffer::BufferType::CL_MEM_WRITE_ONLY, sizeOfArr);
+        auto US = createUS(Pk, Lmz, Mmz, Nmz);
+        auto VS = createVS(Pk, Lmz, Mmz, Nmz);
+        auto HS = createHS(Pk, Lmz, Mmz, Nmz);
+        auto QS = createQS(Pk, Lmz, Mmz, Nmz);
+        auto TS = createTS(Pk, Lmz, Mmz, Nmz);
+        auto Qc = createQc(Pk, Lmz, Mmz, Nmz);
 
-        auto rawA = bufferA();
-        auto rawB = bufferB();
-        commandQueue.enqueueWriteBuffer(a, sizeOfArr, rawA.get());
-        commandQueue.enqueueWriteBuffer(b, sizeOfArr, rawB.get());
+        auto F_X = createF_X(Mmz, Nmz);
 
-        kernel.setKernelArg(0, a);
-        kernel.setKernelArg(1, b);
-        kernel.setKernelArg(2, c);
-        kernel.setKernelArg(3, static_cast<unsigned int>(lengthOfArr));
+        auto Zmz = createZmz(Nmz);
+
+        CLBuffer USBuffer(context, CLBuffer::BufferType::CL_MEM_READ_ONLY, US.getRawSize());
+        CLBuffer VSBuffer(context, CLBuffer::BufferType::CL_MEM_READ_ONLY, VS.getRawSize());
+        CLBuffer HSBuffer(context, CLBuffer::BufferType::CL_MEM_READ_ONLY, HS.getRawSize());
+        CLBuffer QSBuffer(context, CLBuffer::BufferType::CL_MEM_READ_ONLY, QS.getRawSize());
+        CLBuffer TSBuffer(context, CLBuffer::BufferType::CL_MEM_READ_ONLY, TS.getRawSize());
+        CLBuffer QcBuffer(context, CLBuffer::BufferType::CL_MEM_WRITE_ONLY, Qc.getRawSize());
+
+        CLBuffer F_XBuffer(context, CLBuffer::BufferType::CL_MEM_READ_ONLY, F_X.getRawSize());
+        CLBuffer ZmzBuffer(context, CLBuffer::BufferType::CL_MEM_READ_ONLY, Zmz.getRawSize());
+
+        commandQueue.enqueueWriteBuffer(USBuffer, US.getRawSize(), US.getData());
+        commandQueue.enqueueWriteBuffer(VSBuffer, VS.getRawSize(), VS.getData());
+        commandQueue.enqueueWriteBuffer(HSBuffer, HS.getRawSize(), HS.getData());
+        commandQueue.enqueueWriteBuffer(QSBuffer, QS.getRawSize(), QS.getData());
+        commandQueue.enqueueWriteBuffer(TSBuffer, TS.getRawSize(), TS.getData());
+        commandQueue.enqueueWriteBuffer(F_XBuffer, F_X.getRawSize(), F_X.getData());
+        commandQueue.enqueueWriteBuffer(ZmzBuffer, Zmz.getRawSize(), Zmz.getData());
+
+        /*
+            __global float *US,
+            __global float *VS,
+            __global float *HS,
+            __global float *QS,
+            __global float *TS,
+            __global float *F_x,
+            __global float *Zmz,
+            __global float *Qc,
+            const unsigned int Pk,
+            const unsigned int Lmz,
+            const unsigned int Mmz,
+            const unsigned int Nmz
+        */
+
+        kernel.setKernelArg(0, USBuffer);
+        kernel.setKernelArg(1, VSBuffer);
+        kernel.setKernelArg(2, HSBuffer);
+        kernel.setKernelArg(3, QSBuffer);
+        kernel.setKernelArg(4, TSBuffer);
+        kernel.setKernelArg(5, F_XBuffer);
+        kernel.setKernelArg(6, ZmzBuffer);
+        kernel.setKernelArg(7, QcBuffer);
+        kernel.setKernelArg(8, Pk);
+        kernel.setKernelArg(9, Lmz);
+        kernel.setKernelArg(10, Mmz);
+        kernel.setKernelArg(11, Nmz);
 
         size_t localSize = 64;
-        commandQueue.enqueueNDRangeKernel(kernel, 1, ceil(lengthOfArr/(float)localSize)*localSize, localSize);
+        std::chrono::time_point<std::chrono::system_clock> start, end;
+        start = std::chrono::system_clock::now();
+        commandQueue.enqueueNDRangeKernel(
+            kernel, 3,
+            {Pk, Lmz, Mmz},
+            {1, 1, 1});
 
         commandQueue.finish();
+        end = std::chrono::system_clock::now();
+        int elapsed_milliseconds = std::chrono::duration_cast<std::chrono::milliseconds>
+                             (end-start).count();
+ 
+        std::cout << "Execution time: " << elapsed_milliseconds << "ms\n";
 
-        auto rawC = bufferC();
-        commandQueue.enqueueReadBuffer(c, sizeOfArr, rawC.get());
-        for (size_t i = 0; i < lengthOfArr; ++i) {
-            if (rawC[i] != 0.0) {
-                std::cout << "Error: " << rawC[i] << '\n';
-            }
+        commandQueue.enqueueReadBuffer(QcBuffer, Qc.getRawSize(), Qc.getData());
+        for (int i = 0; i < 10; i++) {
+            std::cout << Qc.at(i, 0, 0, 0) << std::endl;
         }
     }
     catch (std::exception& e) {
         std::cout << e.what();
         return -1;
     }
-
-    test();
 
     return 0;
 }

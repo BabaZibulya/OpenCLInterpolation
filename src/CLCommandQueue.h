@@ -18,9 +18,13 @@ public:
     void enqueueReadBuffer(const CLBuffer& buffer, size_t bufferSize, void *const rawBuffer);
     void enqueueNDRangeKernel(
         const CLProgram::CLKernel& kernel,
-        size_t work_dim,
         size_t globalSize,
         size_t localWorkSize);
+    void enqueueNDRangeKernel(
+        const CLProgram::CLKernel& kernel,
+        size_t workDim,
+        const std::vector<size_t>& globalSize,
+        const std::vector<size_t>& localWorkSize);
 
     void finish();
 public:
