@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.10)
 
-project(OpenCLSandbox)
+project(OpenCLInterpolation)
 
 find_package( OpenCL REQUIRED )
 
@@ -21,10 +21,10 @@ set (PROJECT_SRC "./main.cpp"
 
 include_directories("./src")
 
-add_definitions( "-Wall -Werror -lstdc++fs" )
+add_definitions( "-Wall -Werror -lstdc++fs -O3" )
 
 add_compile_options("$<$<CONFIG:DEBUG>:-DCL_DEBUG>")
 
 add_executable(${PROJECT_NAME} ${PROJECT_SRC})
 
-target_link_libraries(OpenCLSandbox OpenCL)
+target_link_libraries(OpenCLInterpolation OpenCL)

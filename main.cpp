@@ -36,15 +36,17 @@ void measureTime(const std::string& message, const std::function<void()>& f)
 int main(int argc, char ** argv) {
 
     unsigned Pk = 40, Lmz = 101, Mmz = 102, Nmz = 103;
-    if (argc == 5) {
-        Pk = std::stol(argv[1]);
-        Lmz = std::stol(argv[2]);
-        Mmz = std::stol(argv[3]);
-        Nmz = std::stol(argv[4]);
-    }
-    else {
-        std::cerr << "Wrong usage. Please provide 4 arguments, or run witout parameters\n";
-        return -1;
+    if (argc != 1) {
+        if (argc == 5) {
+            Pk = std::stol(argv[1]);
+            Lmz = std::stol(argv[2]);
+            Mmz = std::stol(argv[3]);
+            Nmz = std::stol(argv[4]);
+        }
+        else {
+            std::cerr << "Wrong usage. Please provide 4 arguments, or run witout parameters\n";
+            return -1;
+        }
     }
 
     auto platforms = getAllAvailableCLPlatforms();
@@ -53,7 +55,7 @@ int main(int argc, char ** argv) {
     std::vector<CLDevice> devices = CLDevice::getAllAvailableCLDevices(platforms[0]);
     CLLog("Devices for platform-0 ", devices.size(), " platforms");
     
-    CLContext context(devices);
+    CLContext context(platforms[0], devices);
     CLCommandQueue commandQueue(context, devices[0]);
     try {
         CLProgram program = CLProgram::compileSources(context, devices, {"kernels/interpol.cl"});
@@ -128,21 +130,9 @@ int main(int argc, char ** argv) {
         measureTime("OpenCL reading results ", [&](){
             commandQueue.enqueueReadBuffer(QcBuffer, Qc.getRawSize(), Qc.getData());
         });
-
-        double sum = 0.0;
-
-        for(size_t h = 0; h < Pk; h++)
-            for(size_t k = 0; k < Lmz; k++)
-                for(size_t j = 0; j < Mmz; j++)
-                    for(size_t i = 0; i < Nmz; i++) {
-                        sum += Qc.at(h, k, j, i);
-                    }
-
-        std::cout << "Mean ==" << sum / ((double) Pk * Lmz * Mmz * Nmz) << "\n";
-
     }
     catch (std::exception& e) {
-        std::cout << e.what();
+        CLLog("Got an exception: ", e.what());
         return -1;
     }
 

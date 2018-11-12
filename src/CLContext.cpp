@@ -15,16 +15,21 @@ static void logDevices(const std::vector<cl_device_id>& deviceIds)
     }
 }
 
-CLContext::CLContext(const std::vector<CLDevice>& devices) : CLContext(devices, nullptr)
+CLContext::CLContext(const CLPlatform& platform, const std::vector<CLDevice>& devices) : CLContext(platform, devices, nullptr)
 {}
 
-CLContext::CLContext(const std::vector<CLDevice>& devices, CLContext::ErrorCallback errorCallback)
+CLContext::CLContext(const CLPlatform& platform, const std::vector<CLDevice>& devices, CLContext::ErrorCallback errorCallback)
 {
     cl_int errCode;
     std::vector<cl_device_id> deviceIds = devicesToDeviceIds(devices);
     logDevices(deviceIds);
 
-    clContext = clCreateContext(nullptr, devices.size(), deviceIds.data(), errorCallback, nullptr, &errCode);
+    cl_context_properties properties[] = {
+        CL_CONTEXT_PLATFORM, (cl_context_properties) platform.platformId,
+        0
+    };
+
+    clContext = clCreateContext(properties, devices.size(), deviceIds.data(), errorCallback, nullptr, &errCode);
     if (errCode != CL_SUCCESS) {
         CLLog("Error while creating context ", clErrorString(errCode));
         throw std::runtime_error(clErrorString(errCode));
