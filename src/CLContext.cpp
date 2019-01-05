@@ -4,24 +4,29 @@
 #include <algorithm>
 
 #include "CL.h"
+#include "CLLog.h"
 #include "CLUtils.h"
 
-CLContext::CLContext(const std::vector<CLDevice>& devices)
+static void logDevices(const std::vector<cl_device_id>& deviceIds)
 {
-    cl_int errCode;
-    std::vector<cl_device_id> deviceIds = devicesToDeviceIds(devices); 
-    clContext = clCreateContext(nullptr, devices.size(), deviceIds.data(), nullptr, nullptr, &errCode);
-    if (errCode != CL_SUCCESS) {
-        throw std::runtime_error(clErrorString(errCode));
+    CLLog("Creating context with ids: ");
+    for (const cl_device_id& id: deviceIds) {
+        CLLog("\t\t", id);
     }
 }
 
-CLContext::CLContext(const std::vector<CLDevice>& devices, const CLContext::ErrorCallback& errorCallback)
+CLContext::CLContext(const std::vector<CLDevice>& devices) : CLContext(devices, nullptr)
+{}
+
+CLContext::CLContext(const std::vector<CLDevice>& devices, CLContext::ErrorCallback errorCallback)
 {
     cl_int errCode;
     std::vector<cl_device_id> deviceIds = devicesToDeviceIds(devices);
+    logDevices(deviceIds);
+
     clContext = clCreateContext(nullptr, devices.size(), deviceIds.data(), errorCallback, nullptr, &errCode);
     if (errCode != CL_SUCCESS) {
+        CLLog("Error while creating context ", clErrorString(errCode));
         throw std::runtime_error(clErrorString(errCode));
     }
 }

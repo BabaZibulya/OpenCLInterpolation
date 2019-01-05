@@ -68,9 +68,15 @@ const char *clErrorString(int errorCode)
     }
 }
 
+void logError(int error)
+{
+    CLLog("OpenCL error : ", clErrorString(error), " ", __PRETTY_FUNCTION__, " ", __LINE__, '\n');
+}
+
 void checkForCLError(int errCode)
 {
     if (errCode != CL_SUCCESS) {
+        logError(errCode);
         throw std::runtime_error(clErrorString(errCode));
     }
 }

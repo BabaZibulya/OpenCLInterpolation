@@ -13,6 +13,7 @@
 #include "CLCommandQueue.h"
 #include "CLProgram.h"
 #include "CLUtils.h"
+#include "CLLog.h"
 
 #include "NDimContiniousArray.h"
 
@@ -47,8 +48,11 @@ int main(int argc, char ** argv) {
     }
 
     auto platforms = getAllAvailableCLPlatforms();
+    CLLog("Found ", platforms.size(), " platforms");
 
     std::vector<CLDevice> devices = CLDevice::getAllAvailableCLDevices(platforms[0]);
+    CLLog("Devices for platform-0 ", devices.size(), " platforms");
+    
     CLContext context(devices);
     CLCommandQueue commandQueue(context, devices[0]);
     try {

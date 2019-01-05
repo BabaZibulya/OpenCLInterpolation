@@ -15,7 +15,9 @@ set (PROJECT_SRC "./main.cpp"
                  "./src/CLCommandQueue.cpp"
                  "./src/CLProgram.cpp"
                  "./src/CLUtils.cpp"
-                 "./src/CLBuffer.cpp")
+                 "./src/CLBuffer.cpp"
+                 "./src/CLLog.cpp"
+                 )
 
 include_directories("./src")
 

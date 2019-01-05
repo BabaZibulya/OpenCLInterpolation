@@ -7,14 +7,17 @@
 #include <iostream>
 #include <exception>
 
+#include "CLLog.h"
+
 // Utility function and macros
 const char *clErrorString(int errorCode);
 void checkForCLError(int error);
+void logError(int error);
 
 #ifdef CL_DEBUG
 #define CL(command) \
     if (auto result = command; result != CL_SUCCESS) {\
-        std::cout << "OpenCL error : " << clErrorString(result) << " " << __FILE__ << " " << __LINE__ << '\n';\
+        logError(result);\
     }
 #else
 #define CL(command) command
