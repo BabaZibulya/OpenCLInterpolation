@@ -7,12 +7,10 @@
 #include "CLLog.h"
 #include "CLUtils.h"
 
-static void logDevices(const std::vector<cl_device_id>& deviceIds)
+CLContext::CLContext(CLContext&& context)
 {
-    CLLog("Creating context with ids: ");
-    for (const cl_device_id& id: deviceIds) {
-        CLLog("\t\t", id);
-    }
+    this->clContext = context.clContext;
+    context.clContext = nullptr;
 }
 
 CLContext::CLContext(const CLPlatform& platform, const std::vector<CLDevice>& devices) : CLContext(platform, devices, nullptr)
@@ -22,7 +20,6 @@ CLContext::CLContext(const CLPlatform& platform, const std::vector<CLDevice>& de
 {
     cl_int errCode;
     std::vector<cl_device_id> deviceIds = devicesToDeviceIds(devices);
-    logDevices(deviceIds);
 
     cl_context_properties properties[] = {
         CL_CONTEXT_PLATFORM, (cl_context_properties) platform.platformId,
@@ -31,12 +28,14 @@ CLContext::CLContext(const CLPlatform& platform, const std::vector<CLDevice>& de
 
     clContext = clCreateContext(properties, devices.size(), deviceIds.data(), errorCallback, nullptr, &errCode);
     if (errCode != CL_SUCCESS) {
-        CLLog("Error while creating context ", clErrorString(errCode));
+        CLLog("Error while creating context ", errCode, " ", clErrorString(errCode));
         throw std::runtime_error(clErrorString(errCode));
     }
 }
 
 CLContext::~CLContext()
 {
-    clReleaseContext(clContext);
+    if (clContext) {
+        clReleaseContext(clContext);
+    }
 }

@@ -7,7 +7,8 @@
 
 CLPlatform::CLPlatform(cl_platform_id platformId) :
     platformId(platformId)
-{}
+{
+}
 
 std::string getPlatformInfoDetail(cl_platform_id platformId, unsigned int detailInd)
 {
@@ -30,7 +31,7 @@ CLPlatform::PlatformInfo getPlatformInfo(cl_platform_id platformId)
     };
 }
 
-CLPlatform::PlatformInfo CLPlatform::getPlatformInfo()
+CLPlatform::PlatformInfo CLPlatform::getPlatformInfo() const
 {
     return ::getPlatformInfo(platformId);
 }

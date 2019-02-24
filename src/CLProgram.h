@@ -15,6 +15,9 @@ public:
         const CLContext& context,
         const std::vector<CLDevice>& devices,
         const std::vector<std::string>& sources);
+    CLProgram(CLProgram&& program);
+    CLProgram(const CLProgram&) = delete;
+    CLProgram& operator=(const CLProgram&) = delete;
     ~CLProgram();
 
     static CLProgram compileSources(
@@ -28,6 +31,9 @@ public:
 public:
     struct CLKernel {
         CLKernel(const CLProgram& program, const std::string& kernelName);
+        CLKernel(CLKernel&& kernel);
+        CLKernel(const CLKernel&) = delete;
+        CLKernel& operator=(const CLKernel&) = delete;
         ~CLKernel();
 
         template<typename ArgType>

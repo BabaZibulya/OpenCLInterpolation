@@ -11,7 +11,10 @@
 
 class CLCommandQueue {
 public:
+    CLCommandQueue(CLCommandQueue&& commandQueue);
     CLCommandQueue(const CLContext& context, const CLDevice& device);
+    CLCommandQueue(const CLCommandQueue&) = delete;
+    CLCommandQueue& operator=(const CLCommandQueue&) = delete;
     ~CLCommandQueue();
 
     void enqueueWriteBuffer(const CLBuffer& buffer, size_t bufferSize, const void *const rawBuffer);
@@ -28,7 +31,19 @@ public:
     void enqueueNDRangeKernel(
         const CLProgram::CLKernel& kernel,
         size_t workDim,
+        const std::vector<size_t>& globalSize,
+        const std::vector<size_t>& localWorkSize,
+        const std::vector<size_t>& offsets);
+    void enqueueNDRangeKernel(
+        const CLProgram::CLKernel& kernel,
+        size_t workDim,
         const std::vector<size_t>& globalSize
+    );
+    void enqueueNDRangeKernelWithOffset(
+        const CLProgram::CLKernel& kernel,
+        size_t workDim,
+        const std::vector<size_t>& globalSize,
+        const std::vector<size_t>& offset
     );
 
     void finish();

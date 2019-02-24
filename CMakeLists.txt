@@ -2,12 +2,16 @@ cmake_minimum_required(VERSION 3.10)
 
 project(OpenCLInterpolation)
 
-find_package( OpenCL REQUIRED )
-
 set (CMAKE_CXX_STANDARD 17)
+
+set(THREADS_PREFER_PTHREAD_FLAG ON)
+
+find_package(Threads REQUIRED)
 
 set (PROJECT_SRC "./main.cpp"
                  "./InterpolationUtils.cpp"
+                 "./InterpolationProblem.cpp"
+                 "./TimeUtils.cpp"
                  "./src/CL.cpp"
                  "./src/CLPlatform.cpp"
                  "./src/CLDevice.cpp"
@@ -21,10 +25,11 @@ set (PROJECT_SRC "./main.cpp"
 
 include_directories("./src")
 
-add_definitions( "-Wall -Werror -lstdc++fs -O3" )
+add_definitions( "-Wall -Werror -lstdc++fs" )
 
 add_compile_options("$<$<CONFIG:DEBUG>:-DCL_DEBUG>")
 
 add_executable(${PROJECT_NAME} ${PROJECT_SRC})
 
 target_link_libraries(OpenCLInterpolation OpenCL)
+target_link_libraries(OpenCLInterpolation Threads::Threads)

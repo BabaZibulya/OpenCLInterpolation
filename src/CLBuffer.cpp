@@ -5,11 +5,19 @@
 CLBuffer::CLBuffer(const CLContext& context, BufferType bufferType, size_t size)
 {
     cl_int err;
-    buffer = clCreateBuffer(context.clContext, static_cast<cl_mem_flags>(bufferType), size, nullptr, &err);
+    clHandle = clCreateBuffer(context.clContext, static_cast<cl_mem_flags>(bufferType), size, nullptr, &err);
     checkForCLError(err);
+}
+
+CLBuffer::CLBuffer(CLBuffer&& buffer)
+{
+    this->clHandle = buffer.clHandle;
+    buffer.clHandle = nullptr;
 }
 
 CLBuffer::~CLBuffer()
 {
-    clReleaseMemObject(buffer);
+    if (clHandle) {
+        clReleaseMemObject(clHandle);
+    }
 }

@@ -1,4 +1,4 @@
 #!/bin/bash
 
-./build/OpenCLInterpolation
+./build/OpenCLInterpolation $@
 

@@ -29,9 +29,17 @@ CLProgram::CLProgram(
     }
 }
 
+CLProgram::CLProgram(CLProgram&& program)
+{
+    this->program = program.program;
+    program.program = nullptr;
+}
+
 CLProgram::~CLProgram()
 {
-    clReleaseProgram(program);
+    if (program) {
+        clReleaseProgram(program);
+    }
 }
 
 CLProgram CLProgram::compileSources(
@@ -71,14 +79,22 @@ CLProgram::CLKernel::CLKernel(const CLProgram& program, const std::string& kerne
     checkForCLError(err);
 }
 
+CLProgram::CLKernel::CLKernel(CLKernel&& kernel)
+{
+    this->kernel = kernel.kernel;
+    kernel.kernel = nullptr;
+}
+
 CLProgram::CLKernel::~CLKernel()
 {
-    clReleaseKernel(kernel);
+    if (kernel) {
+        clReleaseKernel(kernel);
+    }
 }
 
 void CLProgram::CLKernel::setKernelArg(size_t argPosition, const CLBuffer& buffer)
 {
-    setKernelArg(argPosition, sizeof(buffer.buffer), const_cast<cl_mem*>(&(buffer.buffer)));
+    setKernelArg(argPosition, sizeof(buffer.clHandle), const_cast<cl_mem*>(&(buffer.clHandle)));
 }
 
 void CLProgram::CLKernel::setKernelArg(size_t argPosition, size_t size, void* arg)

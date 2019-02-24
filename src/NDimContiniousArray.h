@@ -1,6 +1,7 @@
 #pragma once
 
 #include <functional>
+#include <memory>
 
 template<typename T>
 class OneDimContiniousArray
