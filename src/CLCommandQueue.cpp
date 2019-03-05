@@ -14,9 +14,9 @@ CommandQueue::CommandQueue(const Context& context, const Device& device)
 {
     cl_int errCode;
 #ifdef CL_VERSION_2_0
-    commandQueue = clCreateCommandQueueWithProperties(context.clHandle, device.deviceId, 0, &errCode);
+    clHandle = clCreateCommandQueueWithProperties(context.clHandle, device.deviceId, 0, &errCode);
 #else
-	clHandle = clCreateCommandQueue(context.clHandle, device.deviceId, 0, &errCode);
+    clHandle = clCreateCommandQueue(context.clHandle, device.deviceId, 0, &errCode);
 #endif
     checkForCLError(errCode);
 }
