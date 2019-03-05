@@ -23,7 +23,7 @@ InterpolationProblem::InterpolationProblem(unsigned Pk, unsigned Lmz, unsigned M
 {
 }
 
-void InterpolationProblem::solve()
+void InterpolationProblem::solve(unsigned chunkSize)
 {
     auto platforms = getAllAvailableCLPlatforms();
     CLLog("Found ", platforms.size(), " platforms");
@@ -37,7 +37,7 @@ void InterpolationProblem::solve()
 
     std::vector<std::thread> taskThreads;
     unsigned chunkNum = 0;
-    unsigned chunkSize = Pk / 10;
+    // unsigned chunkSize = Pk / 10;
     for (auto& task : tasks) {
         taskThreads.push_back(std::thread(&InterpolationTask::solve, &task, chunkNum, chunkSize));
         chunkNum++;
@@ -46,6 +46,25 @@ void InterpolationProblem::solve()
     for (auto& thread: taskThreads) {
         thread.join();
     }
+
+    checkResults();
+}
+
+void InterpolationProblem::checkResults()
+{
+    //Pk, Lmz, Mmz, Nmz
+
+    double sum = 0.0;
+
+    for(size_t h = 0; h < Pk; h++)
+        for(size_t k = 0; k < Lmz; k++)
+            for(size_t j = 0; j < Mmz; j++)
+                for(size_t i = 0; i < Nmz; i++) {
+                    sum += Qc.at(h, k, j, i);
+                }
+
+    
+    CLLog("Mean = ", sum / ((double) Pk * Lmz * Mmz * Nmz));
 }
 
 InterpolationProblem::InterpolationTask::InterpolationTask
@@ -68,10 +87,20 @@ void InterpolationProblem::InterpolationTask::solve(unsigned chunkNum, unsigned 
         InterpolationData interpolationData(problem, context, kernel, commandQueue, platformName);
 
         measureTime(platformName + " OpenCL ", [&]() {
-            commandQueue.enqueueNDRangeKernelWithOffset(
-                kernel, 3,
-                {(chunkNum == 0) ? chunkSize : problem.Pk, problem.Lmz, problem.Mmz},
-                {(chunkNum == 0) ? 0 : chunkSize, 0, 0});
+            if ((chunkSize == 0 && chunkNum == 0) || (chunkSize == problem.Pk && chunkNum == 1)) {
+                CLLog(problem.platformName, " nothing to do");
+            }
+            else if ((chunkSize == 0 && chunkNum == 1) || (chunkSize == problem.Pk && chunkNum == 0)) {
+                commandQueue.enqueueNDRangeKernel(
+                    kernel, 3,
+                    {problem.Pk, problem.Lmz, problem.Mmz});
+            }
+            else {
+                commandQueue.enqueueNDRangeKernelWithOffset(
+                    kernel, 3,
+                    {(chunkNum == 0) ? chunkSize : problem.Pk, problem.Lmz, problem.Mmz},
+                    {(chunkNum == 0) ? 0 : chunkSize, 0, 0});
+            }
             commandQueue.finish();
         });
 
@@ -148,7 +177,22 @@ InterpolationProblem::InterpolationData::InterpolationData(
 
 void InterpolationProblem::InterpolationData::readData()
 {
+    FourDimContiniousArray<float> result(problem.Pk, problem.Lmz, problem.Mmz, problem.Nmz);
     measureTime(platformName + " OpenCL reading results ", [&](){
-        commandQueue.enqueueReadBuffer(QcBuffer, problem.Qc.getRawSize(), problem.Qc.getData());
+        commandQueue.enqueueReadBuffer(QcBuffer, result.getRawSize(), result.getData());
     });
+
+    // Temp hack
+    // TODO load with offsets
+    for (size_t i = 0; i < problem.Pk; ++i) {
+        for (size_t j = 0; j < problem.Lmz; ++j) {
+            for (size_t k = 0; k < problem.Mmz; ++k) {
+                for (size_t l = 0; l < problem.Nmz; ++l) {
+                    if (result.at(i, j, k, l) != 0.f) {
+                        problem.Qc.at(i, j, k, l) = result.at(i, j, k, l);
+                    }
+                }
+            }
+        }
+    }
 }

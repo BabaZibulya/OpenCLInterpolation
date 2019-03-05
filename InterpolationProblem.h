@@ -14,7 +14,8 @@ class InterpolationProblem
 {
 public:
     InterpolationProblem(unsigned Pk = 40, unsigned Lmz = 100, unsigned Mmz = 102, unsigned Nmz = 103);
-    void solve();
+    void solve(unsigned chunkSize);
+    void checkResults();
 private:
     struct InterpolationData {
         InterpolationData(
