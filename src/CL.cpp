@@ -1,6 +1,6 @@
 #include "CL.h"
 
-const char *clErrorString(int errorCode)
+const char *CL::clErrorString(int errorCode)
 {
     switch (errorCode) {
         case CL_SUCCESS: return "CL_SUCCESS";
@@ -62,18 +62,20 @@ const char *clErrorString(int errorCode)
         case CL_INVALID_COMPILER_OPTIONS: return "CL_INVALID_COMPILER_OPTIONS";
         case CL_INVALID_LINKER_OPTIONS: return "CL_INVALID_LINKER_OPTIONS";
         case CL_INVALID_DEVICE_PARTITION_COUNT: return "CL_INVALID_DEVICE_PARTITION_COUNT";
+#ifdef CL_VERSION_2_0
         case CL_INVALID_PIPE_SIZE: return "CL_INVALID_PIPE_SIZE";
         case CL_INVALID_DEVICE_QUEUE: return "CL_INVALID_DEVICE_QUEUE";
+#endif
         default: return "UNKNOWN_ERROR";
     }
 }
 
-void logError(int error)
+void CL::logError(int error)
 {
-    CLLog("OpenCL error : ", clErrorString(error), " ", __PRETTY_FUNCTION__, " ", __LINE__, '\n');
+    CLLog("OpenCL error : ", clErrorString(error), " ", __LINE__, '\n');
 }
 
-void checkForCLError(int errCode)
+void CL::checkForCLError(int errCode)
 {
     if (errCode != CL_SUCCESS) {
         logError(errCode);

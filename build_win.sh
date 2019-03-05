@@ -6,5 +6,5 @@ if [ ! -d "build" ]; then
 fi
 
 cd build
-cmake -G 'Unix Makefiles' -DCMAKE_BUILD_TYPE=Debug ..
-make -j8
+cmake -G 'Visual Studio 15 2017 Win64' -DCMAKE_BUILD_TYPE=Debug ..
+

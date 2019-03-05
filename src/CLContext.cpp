@@ -7,35 +7,37 @@
 #include "CLLog.h"
 #include "CLUtils.h"
 
-CLContext::CLContext(CLContext&& context)
+using namespace CL;
+
+Context::Context(Context&& context)
 {
-    this->clContext = context.clContext;
-    context.clContext = nullptr;
+    this->clHandle = context.clHandle;
+    context.clHandle = nullptr;
 }
 
-CLContext::CLContext(const CLPlatform& platform, const std::vector<CLDevice>& devices) : CLContext(platform, devices, nullptr)
+Context::Context(const Platform& platform, const std::vector<Device>& devices) : Context(platform, devices, nullptr)
 {}
 
-CLContext::CLContext(const CLPlatform& platform, const std::vector<CLDevice>& devices, CLContext::ErrorCallback errorCallback)
+Context::Context(const Platform& platform, const std::vector<Device>& devices, Context::ContextErrorCallback errorCallback)
 {
     cl_int errCode;
     std::vector<cl_device_id> deviceIds = devicesToDeviceIds(devices);
 
     cl_context_properties properties[] = {
-        CL_CONTEXT_PLATFORM, (cl_context_properties) platform.platformId,
+        CL_CONTEXT_PLATFORM, (cl_context_properties) platform.clHandle,
         0
     };
 
-    clContext = clCreateContext(properties, devices.size(), deviceIds.data(), errorCallback, nullptr, &errCode);
+    clHandle = clCreateContext(properties, devices.size(), deviceIds.data(), errorCallback, nullptr, &errCode);
     if (errCode != CL_SUCCESS) {
         CLLog("Error while creating context ", errCode, " ", clErrorString(errCode));
         throw std::runtime_error(clErrorString(errCode));
     }
 }
 
-CLContext::~CLContext()
+Context::~Context()
 {
-    if (clContext) {
-        clReleaseContext(clContext);
+    if (clHandle) {
+        clReleaseContext(clHandle);
     }
 }

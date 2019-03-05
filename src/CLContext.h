@@ -5,15 +5,21 @@
 #include "CLDevice.h"
 #include "CLPlatform.h"
 
-class CLContext {
-public:
-    using ErrorCallback = void (*)(const char*, const void*, size_t cb, void* user_data);
-    CLContext(CLContext&& context);
-    CLContext(const CLPlatform& platform, const std::vector<CLDevice>& devices);
-    CLContext(const CLPlatform& platform, const std::vector<CLDevice>& device, ErrorCallback errorCallback);
-    CLContext(const CLContext&) = delete;
-    CLContext& operator=(const CLContext&) = delete;
-    ~CLContext();
-public:
-    cl_context clContext;
-};
+namespace CL {
+	class Context {
+	public:
+#ifdef _WIN32
+		using ContextErrorCallback = void(__stdcall*)(const char*, const void*, size_t cb, void* user_data);
+#else
+		using ContextErrorCallback = void(*)(const char*, const void*, size_t cb, void* user_data);
+#endif
+		Context(Context&& context);
+		Context(const Platform& platform, const std::vector<Device>& devices);
+		Context(const Platform& platform, const std::vector<Device>& device, ContextErrorCallback errorCallback);
+		Context(const Context&) = delete;
+		Context& operator=(const Context&) = delete;
+		~Context();
+	public:
+		cl_context clHandle;
+	};
+}

@@ -2,98 +2,101 @@
 
 #include "CL.h"
 
-static cl_device_id deviceId; 
+using namespace CL;
 
-CLCommandQueue::CLCommandQueue(CLCommandQueue&& commandQueue)
+CommandQueue::CommandQueue(CommandQueue&& commandQueue)
 {
-    this->commandQueue = commandQueue.commandQueue;
-    commandQueue.commandQueue = nullptr;
+    this->clHandle = commandQueue.clHandle;
+    commandQueue.clHandle = nullptr;
 }
 
-CLCommandQueue::CLCommandQueue(const CLContext& context, const CLDevice& device)
+CommandQueue::CommandQueue(const Context& context, const Device& device)
 {
     cl_int errCode;
-    commandQueue = clCreateCommandQueueWithProperties(context.clContext, device.deviceId, 0, &errCode);
+#ifdef CL_VERSION_2_0
+    commandQueue = clCreateCommandQueueWithProperties(context.clHandle, device.deviceId, 0, &errCode);
+#else
+	clHandle = clCreateCommandQueue(context.clHandle, device.deviceId, 0, &errCode);
+#endif
     checkForCLError(errCode);
-    deviceId = device.deviceId;
 }
 
-CLCommandQueue::~CLCommandQueue()
+CommandQueue::~CommandQueue()
 {
-    if (commandQueue) {
-        clReleaseCommandQueue(commandQueue);
+    if (clHandle) {
+        clReleaseCommandQueue(clHandle);
     }
 }
 
-void CLCommandQueue::enqueueWriteBuffer(const CLBuffer& buffer, size_t bufferSize, const void *const rawBuffer)
+void CommandQueue::enqueueWriteBuffer(const Buffer& buffer, size_t bufferSize, const void *const rawBuffer)
 {
-    CL(clEnqueueWriteBuffer(commandQueue, buffer.clHandle, CL_TRUE, 0, bufferSize, rawBuffer, 0, nullptr, nullptr));
+    CL(clEnqueueWriteBuffer(clHandle, buffer.clHandle, CL_TRUE, 0, bufferSize, rawBuffer, 0, nullptr, nullptr));
 }
 
-void CLCommandQueue::enqueueReadBuffer(const CLBuffer& buffer, size_t bufferSize, void *const rawBuffer)
+void CommandQueue::enqueueReadBuffer(const Buffer& buffer, size_t bufferSize, void *const rawBuffer)
 {
-    CL(clEnqueueReadBuffer(commandQueue, buffer.clHandle, CL_TRUE, 0, bufferSize, rawBuffer, 0, nullptr, nullptr));
+    CL(clEnqueueReadBuffer(clHandle, buffer.clHandle, CL_TRUE, 0, bufferSize, rawBuffer, 0, nullptr, nullptr));
 }
 
-void CLCommandQueue::enqueueNDRangeKernel(
-    const CLProgram::CLKernel& kernel,
+void CommandQueue::enqueueNDRangeKernel(
+    const Program::Kernel& kernel,
     size_t globalSize,
     size_t localWorkSize)
 {
-    CL(clEnqueueNDRangeKernel(commandQueue, kernel.kernel, 1, nullptr, &globalSize, &localWorkSize, 0, nullptr, nullptr));
+    CL(clEnqueueNDRangeKernel(clHandle, kernel.kernel, 1, nullptr, &globalSize, &localWorkSize, 0, nullptr, nullptr));
 }
 
-void CLCommandQueue::enqueueNDRangeKernel(
-    const CLProgram::CLKernel& kernel,
+void CommandQueue::enqueueNDRangeKernel(
+    const Program::Kernel& kernel,
     size_t workDim,
-    const std::vector<size_t>& globalSize,
-    const std::vector<size_t>& localWorkSize)
+    const GlobalSize& globalSize,
+    const LocalSize& localWorkSize)
 {
-    if (globalSize.size() != workDim || localWorkSize.size() != workDim) {
+    if (globalSize.get().size() != workDim || localWorkSize.get().size() != workDim) {
         throw std::runtime_error("Wrong dimensions of global or local work size");
     }
-    CL(clEnqueueNDRangeKernel(commandQueue, kernel.kernel, workDim, nullptr, &globalSize[0], &localWorkSize[0], 0, nullptr, nullptr));
+    CL(clEnqueueNDRangeKernel(clHandle, kernel.kernel, workDim, nullptr, &globalSize.get()[0], &localWorkSize.get()[0], 0, nullptr, nullptr));
 }
 
-void CLCommandQueue::enqueueNDRangeKernel(
-    const CLProgram::CLKernel& kernel,
+void CommandQueue::enqueueNDRangeKernel(
+    const Program::Kernel& kernel,
     size_t workDim,
-    const std::vector<size_t>& globalSize,
-    const std::vector<size_t>& localWorkSize,
-    const std::vector<size_t>& offsets
+    const GlobalSize& globalSize,
+    const LocalSize& localWorkSize,
+    const Offset& offsets
     )
 {
-    if (globalSize.size() != workDim || localWorkSize.size() != workDim || offsets.size() != workDim) {
+    if (globalSize.get().size() != workDim || localWorkSize.get().size() != workDim || offsets.get().size() != workDim) {
         throw std::runtime_error("Wrong dimensions of global or local work size");
     }
-    CL(clEnqueueNDRangeKernel(commandQueue, kernel.kernel, workDim, &offsets[0], &globalSize[0], &localWorkSize[0], 0, nullptr, nullptr));
+    CL(clEnqueueNDRangeKernel(clHandle, kernel.kernel, workDim, &offsets.get()[0], &globalSize.get()[0], &localWorkSize.get()[0], 0, nullptr, nullptr));
 }
 
-void CLCommandQueue::enqueueNDRangeKernel(
-    const CLProgram::CLKernel& kernel,
+void CommandQueue::enqueueNDRangeKernel(
+    const Program::Kernel& kernel,
     size_t workDim,
-    const std::vector<size_t>& globalSize)
+    const GlobalSize& globalSize)
 {
-    if (globalSize.size() != workDim) {
+    if (globalSize.get().size() != workDim) {
         throw std::runtime_error("Wrong dimensions of global or local work size");
     }
-    CL(clEnqueueNDRangeKernel(commandQueue, kernel.kernel, workDim, nullptr, &globalSize[0], nullptr, 0, nullptr, nullptr));
+    CL(clEnqueueNDRangeKernel(clHandle, kernel.kernel, workDim, nullptr, &globalSize.get()[0], nullptr, 0, nullptr, nullptr));
 }
 
-void CLCommandQueue::enqueueNDRangeKernelWithOffset(
-    const CLProgram::CLKernel& kernel,
+void CommandQueue::enqueueNDRangeKernel(
+    const Program::Kernel& kernel,
     size_t workDim,
-    const std::vector<size_t>& globalSize,
-    const std::vector<size_t>& offset
+    const GlobalSize& globalSize,
+    const Offset& offset
     )
 {
-    if (globalSize.size() != workDim) {
+    if (globalSize.get().size() != workDim) {
         throw std::runtime_error("Wrong dimensions of global or local work size");
     }
-    CL(clEnqueueNDRangeKernel(commandQueue, kernel.kernel, workDim, &offset[0], &globalSize[0], nullptr, 0, nullptr, nullptr));
+    CL(clEnqueueNDRangeKernel(clHandle, kernel.kernel, workDim, &offset.get()[0], &globalSize.get()[0], nullptr, 0, nullptr, nullptr));
 }
 
-void CLCommandQueue::finish()
+void CommandQueue::finish()
 {
-    clFinish(commandQueue);
+    clFinish(clHandle);
 }

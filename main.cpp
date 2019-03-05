@@ -20,9 +20,7 @@ int main(int argc, char ** argv) {
     }
 
     InterpolationProblem interpolationProblem(Pk, Lmz, Mmz, Nmz);
-    for (int i = 0; i <= 10; ++i) {
-        interpolationProblem.solve(Pk / 10 * i);
-    }
+	interpolationProblem.solve();
 
     return 0;
 }

@@ -7,9 +7,11 @@
 #include "CL.h"
 #include "CLUtils.h"
 
-CLProgram::CLProgram(
-    const CLContext& context,
-    const std::vector<CLDevice>& devices,
+using namespace CL;
+
+Program::Program(
+    const Context& context,
+    const std::vector<Device>& devices,
     const std::vector<std::string>& sources)
 {
     std::vector<const char*> cSources(sources.size());
@@ -17,7 +19,7 @@ CLProgram::CLProgram(
     std::vector<size_t> lengths(sources.size());
     std::transform(sources.cbegin(), sources.cend(), lengths.begin(), [](const std::string& source) { return source.length(); });
     cl_int errCode;
-    program = clCreateProgramWithSource(context.clContext, cSources.size(), &cSources[0], &lengths[0], &errCode);
+    program = clCreateProgramWithSource(context.clHandle, cSources.size(), &cSources[0], &lengths[0], &errCode);
     checkForCLError(errCode);
 
     auto result = clBuildProgram(program, devices.size(), &devicesToDeviceIds(devices)[0], "-w", nullptr, nullptr);
@@ -29,22 +31,22 @@ CLProgram::CLProgram(
     }
 }
 
-CLProgram::CLProgram(CLProgram&& program)
+Program::Program(Program&& program)
 {
     this->program = program.program;
     program.program = nullptr;
 }
 
-CLProgram::~CLProgram()
+Program::~Program()
 {
     if (program) {
         clReleaseProgram(program);
     }
 }
 
-CLProgram CLProgram::compileSources(
-    const CLContext& context,
-    const std::vector<CLDevice>& devices,
+Program Program::compileSources(
+    const Context& context,
+    const std::vector<Device>& devices,
     const std::vector<std::string>& pathes)
 {
     std::vector<std::string> sources(pathes.size());
@@ -59,10 +61,10 @@ CLProgram CLProgram::compileSources(
             throw std::runtime_error("File " + path + " could not be opened");
         }
     });
-    return CLProgram(context, devices, sources);
+    return Program(context, devices, sources);
 }
 
-std::string CLProgram::compilationLog(const CLDevice& device)
+std::string Program::compilationLog(const Device& device)
 {
     size_t compilationLogSize;
     clGetProgramBuildInfo(program, device.deviceId, CL_PROGRAM_BUILD_LOG, 0, nullptr, &compilationLogSize);
@@ -72,37 +74,37 @@ std::string CLProgram::compilationLog(const CLDevice& device)
 }
 
 
-CLProgram::CLKernel::CLKernel(const CLProgram& program, const std::string& kernelName)
+Program::Kernel::Kernel(const Program& program, const std::string& kernelName)
 {
     cl_int err;
     kernel = clCreateKernel(program.program, kernelName.c_str(), &err);
     checkForCLError(err);
 }
 
-CLProgram::CLKernel::CLKernel(CLKernel&& kernel)
+Program::Kernel::Kernel(Kernel&& kernel)
 {
     this->kernel = kernel.kernel;
     kernel.kernel = nullptr;
 }
 
-CLProgram::CLKernel::~CLKernel()
+Program::Kernel::~Kernel()
 {
     if (kernel) {
         clReleaseKernel(kernel);
     }
 }
 
-void CLProgram::CLKernel::setKernelArg(size_t argPosition, const CLBuffer& buffer)
+void Program::Kernel::setKernelArg(size_t argPosition, const Buffer& buffer)
 {
     setKernelArg(argPosition, sizeof(buffer.clHandle), const_cast<cl_mem*>(&(buffer.clHandle)));
 }
 
-void CLProgram::CLKernel::setKernelArg(size_t argPosition, size_t size, void* arg)
+void Program::Kernel::setKernelArg(size_t argPosition, size_t size, void* arg)
 {
     CL(clSetKernelArg(kernel, argPosition, size, arg));
 }
 
-CLProgram::CLKernel CLProgram::createKernel(const std::string& kernelName)
+Program::Kernel Program::createKernel(const std::string& kernelName)
 {
-    return CLKernel(*this, kernelName);
+    return Kernel(*this, kernelName);
 }

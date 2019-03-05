@@ -5,8 +5,10 @@
 
 #include "CL.h"
 
-CLPlatform::CLPlatform(cl_platform_id platformId) :
-    platformId(platformId)
+using namespace CL;
+
+Platform::Platform(cl_platform_id platformId) :
+    clHandle(platformId)
 {
 }
 
@@ -20,9 +22,9 @@ std::string getPlatformInfoDetail(cl_platform_id platformId, unsigned int detail
     return platform_detail;
 }
 
-CLPlatform::PlatformInfo getPlatformInfo(cl_platform_id platformId)
+Platform::PlatformInfo getPlatformInfo(cl_platform_id platformId)
 {
-    return CLPlatform::PlatformInfo{
+    return Platform::PlatformInfo{
         getPlatformInfoDetail(platformId, CL_PLATFORM_PROFILE),
         getPlatformInfoDetail(platformId, CL_PLATFORM_VERSION),
         getPlatformInfoDetail(platformId, CL_PLATFORM_NAME),
@@ -31,12 +33,12 @@ CLPlatform::PlatformInfo getPlatformInfo(cl_platform_id platformId)
     };
 }
 
-CLPlatform::PlatformInfo CLPlatform::getPlatformInfo() const
+Platform::PlatformInfo Platform::getPlatformInfo() const
 {
-    return ::getPlatformInfo(platformId);
+    return ::getPlatformInfo(clHandle);
 }
 
-std::ostream& operator<< (std::ostream& ostream, const CLPlatform::PlatformInfo& platformInfo)
+std::ostream& CL::operator<< (std::ostream& ostream, const Platform::PlatformInfo& platformInfo)
 {
     ostream << "Platform info: \n"
             << "Profile " << platformInfo.profile << '\n'

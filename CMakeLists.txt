@@ -25,7 +25,22 @@ set (PROJECT_SRC "./main.cpp"
 
 include_directories("./src")
 
-add_definitions( "-Wall -Werror -lstdc++fs" )
+if(MSVC)
+  # Force to always compile with W4
+  if(CMAKE_CXX_FLAGS MATCHES "/W[0-4]")
+    string(REGEX REPLACE "/W[0-4]" "/W4" CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
+  else()
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /W4")
+  endif()
+elseif(CMAKE_COMPILER_IS_GNUCC OR CMAKE_COMPILER_IS_GNUCXX)
+  # Update if necessary
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wno-long-long -pedantic")
+endif()
+
+if(MSVC)
+  include_directories("$ENV{CUDA_PATH}/include")
+  link_directories("$ENV{CUDA_PATH}/lib/x64/")
+endif()
 
 add_compile_options("$<$<CONFIG:DEBUG>:-DCL_DEBUG>")
 

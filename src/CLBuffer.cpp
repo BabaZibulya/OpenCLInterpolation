@@ -2,20 +2,22 @@
 
 #include "CL.h"
 
-CLBuffer::CLBuffer(const CLContext& context, BufferType bufferType, size_t size)
+using namespace CL;
+
+Buffer::Buffer(const Context& context, BufferType bufferType, size_t size)
 {
     cl_int err;
-    clHandle = clCreateBuffer(context.clContext, static_cast<cl_mem_flags>(bufferType), size, nullptr, &err);
+    clHandle = clCreateBuffer(context.clHandle, static_cast<cl_mem_flags>(bufferType), size, nullptr, &err);
     checkForCLError(err);
 }
 
-CLBuffer::CLBuffer(CLBuffer&& buffer)
+Buffer::Buffer(Buffer&& buffer)
 {
     this->clHandle = buffer.clHandle;
     buffer.clHandle = nullptr;
 }
 
-CLBuffer::~CLBuffer()
+Buffer::~Buffer()
 {
     if (clHandle) {
         clReleaseMemObject(clHandle);

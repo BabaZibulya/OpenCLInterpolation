@@ -14,33 +14,34 @@ class InterpolationProblem
 {
 public:
     InterpolationProblem(unsigned Pk = 40, unsigned Lmz = 100, unsigned Mmz = 102, unsigned Nmz = 103);
+	void solve();
     void solve(unsigned chunkSize);
     void checkResults();
 private:
     struct InterpolationData {
         InterpolationData(
             InterpolationProblem& problem,
-            const CLContext& context,
-            CLProgram::CLKernel& kernel,
-            CLCommandQueue& commandQueue,
+            const CL::Context& context,
+			CL::Program::Kernel& kernel,
+            CL::CommandQueue& commandQueue,
             const std::string platformName = "");
 
         void readData();
     private:
         std::string platformName;
-        CLCommandQueue& commandQueue;
+        CL::CommandQueue& commandQueue;
         InterpolationProblem& problem;
-        CLBuffer QcBuffer, USBuffer, VSBuffer, HSBuffer, QSBuffer, TSBuffer, F_XBuffer, ZmzBuffer;
+		CL::Buffer QcBuffer, USBuffer, VSBuffer, HSBuffer, QSBuffer, TSBuffer, F_XBuffer, ZmzBuffer;
     };
     struct InterpolationTask {
-        InterpolationTask(const CLPlatform& platform, InterpolationProblem& problem);
+        InterpolationTask(const CL::Platform& platform, InterpolationProblem& problem);
         void solve(unsigned chunkNum, unsigned chunkSize);
     private:
         InterpolationProblem& problem;
-        CLPlatform platform;
-        std::vector<CLDevice> devices;
-        CLContext context;
-        CLCommandQueue commandQueue;
+		CL::Platform platform;
+        std::vector<CL::Device> devices;
+		CL::Context context;
+		CL::CommandQueue commandQueue;
         std::string platformName;
     };
     friend struct InterpolationTask;

@@ -10,14 +10,16 @@
 #include "CLLog.h"
 
 // Utility function and macros
-const char *clErrorString(int errorCode);
-void checkForCLError(int error);
-void logError(int error);
+namespace CL {
+	const char *clErrorString(int errorCode);
+	void checkForCLError(int error);
+	void logError(int error);
+}
 
 #ifdef CL_DEBUG
 #define CL(command) \
     if (auto result = command; result != CL_SUCCESS) {\
-        logError(result);\
+        CL::logError(result);\
     }
 #else
 #define CL(command) command

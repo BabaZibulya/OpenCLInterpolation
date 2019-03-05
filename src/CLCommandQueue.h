@@ -8,45 +8,53 @@
 #include "CLBuffer.h"
 #include "CLProgram.h"
 
+#include "NamedParameter.h"
 
-class CLCommandQueue {
-public:
-    CLCommandQueue(CLCommandQueue&& commandQueue);
-    CLCommandQueue(const CLContext& context, const CLDevice& device);
-    CLCommandQueue(const CLCommandQueue&) = delete;
-    CLCommandQueue& operator=(const CLCommandQueue&) = delete;
-    ~CLCommandQueue();
+namespace CL {
+	class CommandQueue {
+	public:
+		CommandQueue(CommandQueue&& commandQueue);
+		CommandQueue(const Context& context, const Device& device);
+		CommandQueue(const CommandQueue&) = delete;
+		CommandQueue& operator=(const CommandQueue&) = delete;
+		~CommandQueue();
 
-    void enqueueWriteBuffer(const CLBuffer& buffer, size_t bufferSize, const void *const rawBuffer);
-    void enqueueReadBuffer(const CLBuffer& buffer, size_t bufferSize, void *const rawBuffer);
-    void enqueueNDRangeKernel(
-        const CLProgram::CLKernel& kernel,
-        size_t globalSize,
-        size_t localWorkSize);
-    void enqueueNDRangeKernel(
-        const CLProgram::CLKernel& kernel,
-        size_t workDim,
-        const std::vector<size_t>& globalSize,
-        const std::vector<size_t>& localWorkSize);
-    void enqueueNDRangeKernel(
-        const CLProgram::CLKernel& kernel,
-        size_t workDim,
-        const std::vector<size_t>& globalSize,
-        const std::vector<size_t>& localWorkSize,
-        const std::vector<size_t>& offsets);
-    void enqueueNDRangeKernel(
-        const CLProgram::CLKernel& kernel,
-        size_t workDim,
-        const std::vector<size_t>& globalSize
-    );
-    void enqueueNDRangeKernelWithOffset(
-        const CLProgram::CLKernel& kernel,
-        size_t workDim,
-        const std::vector<size_t>& globalSize,
-        const std::vector<size_t>& offset
-    );
+		void enqueueWriteBuffer(const Buffer& buffer, size_t bufferSize, const void *const rawBuffer);
+		void enqueueReadBuffer(const Buffer& buffer, size_t bufferSize, void *const rawBuffer);
 
-    void finish();
-public:
-    cl_command_queue commandQueue;
-};
+		using GlobalSize = NamedType<std::vector<size_t>, struct GlobalSizeParameter>;
+		using LocalSize = NamedType<std::vector<size_t>, struct LocalSize>;
+		using Offset = NamedType<std::vector<size_t>, struct OffsetParameter>;
+
+		void enqueueNDRangeKernel(
+			const Program::Kernel& kernel,
+			size_t globalSize,
+			size_t localWorkSize);
+		void enqueueNDRangeKernel(
+			const Program::Kernel& kernel,
+			size_t workDim,
+			const GlobalSize& globalSize,
+			const LocalSize& localWorkSize);
+		void enqueueNDRangeKernel(
+			const Program::Kernel& kernel,
+			size_t workDim,
+			const GlobalSize& globalSize,
+			const LocalSize& localWorkSize,
+			const Offset& offsets);
+		void enqueueNDRangeKernel(
+			const Program::Kernel& kernel,
+			size_t workDim,
+			const GlobalSize& globalSize
+		);
+		void enqueueNDRangeKernel(
+			const Program::Kernel& kernel,
+			size_t workDim,
+			const GlobalSize& globalSize,
+			const Offset& offset
+		);
+
+		void finish();
+	public:
+		cl_command_queue clHandle;
+	};
+}

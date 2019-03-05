@@ -21,11 +21,27 @@ InterpolationProblem::InterpolationProblem(unsigned Pk, unsigned Lmz, unsigned M
     F_X(createF_X(Mmz, Nmz)),
     Zmz(createZmz(Nmz))
 {
+	size_t size = US.getRawSize() + VS.getRawSize() + HS.getRawSize() + QS.getRawSize() + TS.getRawSize() + Qc.getRawSize() + F_X.getRawSize() + Zmz.getRawSize();
+	CLLog("Allocated ", size / (1024  * 1024), " Mb of data");
+}
+
+void InterpolationProblem::solve()
+{
+	auto platforms = CL::getAllAvailableCLPlatforms();
+	CLLog("Found ", platforms.size(), " platforms");
+	for (auto& platform : platforms) {
+		CLLog(platform.getPlatformInfo());
+	}
+	InterpolationTask task(platforms[0], *this);
+
+	task.solve(0, Pk);
+
+	checkResults();
 }
 
 void InterpolationProblem::solve(unsigned chunkSize)
 {
-    auto platforms = getAllAvailableCLPlatforms();
+    auto platforms = CL::getAllAvailableCLPlatforms();
     CLLog("Found ", platforms.size(), " platforms");
     for (auto& platform : platforms) {
         CLLog(platform.getPlatformInfo());
@@ -68,10 +84,10 @@ void InterpolationProblem::checkResults()
 }
 
 InterpolationProblem::InterpolationTask::InterpolationTask
-    (const CLPlatform& platform, InterpolationProblem& problem)
+    (const CL::Platform& platform, InterpolationProblem& problem)
         : problem(problem),
           platform(platform),
-          devices(CLDevice::getAllAvailableCLDevices(platform)),
+          devices(CL::Device::getAllAvailableCLDevices(platform)),
           context(platform, devices),
           commandQueue(context, devices[0]),
           platformName(platform.getPlatformInfo().name)
@@ -81,8 +97,8 @@ InterpolationProblem::InterpolationTask::InterpolationTask
 void InterpolationProblem::InterpolationTask::solve(unsigned chunkNum, unsigned chunkSize)
 {
     try {
-        CLProgram program = CLProgram::compileSources(context, devices, {"kernels/interpol.cl"});
-        CLProgram::CLKernel kernel = program.createKernel("interpol");
+		CL::Program program = CL::Program::compileSources(context, devices, {"kernels/interpol.cl"});
+		CL::Program::Kernel kernel = program.createKernel("interpol");
 
         InterpolationData interpolationData(problem, context, kernel, commandQueue, platformName);
 
@@ -93,13 +109,13 @@ void InterpolationProblem::InterpolationTask::solve(unsigned chunkNum, unsigned 
             else if ((chunkSize == 0 && chunkNum == 1) || (chunkSize == problem.Pk && chunkNum == 0)) {
                 commandQueue.enqueueNDRangeKernel(
                     kernel, 3,
-                    {problem.Pk, problem.Lmz, problem.Mmz});
+					CL::CommandQueue::GlobalSize{ {problem.Pk, problem.Lmz, problem.Mmz} });
             }
             else {
-                commandQueue.enqueueNDRangeKernelWithOffset(
+                commandQueue.enqueueNDRangeKernel(
                     kernel, 3,
-                    {(chunkNum == 0) ? chunkSize : problem.Pk, problem.Lmz, problem.Mmz},
-                    {(chunkNum == 0) ? 0 : chunkSize, 0, 0});
+					CL::CommandQueue::GlobalSize{ {(chunkNum == 0) ? chunkSize : problem.Pk, problem.Lmz, problem.Mmz} },
+					CL::CommandQueue::Offset{ {(chunkNum == 0) ? 0 : chunkSize, 0, 0} });
             }
             commandQueue.finish();
         });
@@ -114,21 +130,21 @@ void InterpolationProblem::InterpolationTask::solve(unsigned chunkNum, unsigned 
 
 InterpolationProblem::InterpolationData::InterpolationData(
     InterpolationProblem& problem,
-    const CLContext& context,
-    CLProgram::CLKernel& kernel,
-    CLCommandQueue& commandQueue,
+    const CL::Context& context,
+	CL::Program::Kernel& kernel,
+	CL::CommandQueue& commandQueue,
     const std::string platformName)
     : platformName(platformName),
       commandQueue(commandQueue),
       problem(problem),
-      QcBuffer(context, CLBuffer::BufferType::MEM_WRITE_ONLY, problem.Qc.getRawSize()),
-      USBuffer(context, CLBuffer::BufferType::MEM_READ_ONLY, problem.US.getRawSize()),
-      VSBuffer(context, CLBuffer::BufferType::MEM_READ_ONLY, problem.VS.getRawSize()),
-      HSBuffer(context, CLBuffer::BufferType::MEM_READ_ONLY, problem.HS.getRawSize()),
-      QSBuffer(context, CLBuffer::BufferType::MEM_READ_ONLY, problem.QS.getRawSize()),
-      TSBuffer(context, CLBuffer::BufferType::MEM_READ_ONLY, problem.TS.getRawSize()),
-      F_XBuffer(context, CLBuffer::BufferType::MEM_READ_ONLY, problem.F_X.getRawSize()),
-      ZmzBuffer(context, CLBuffer::BufferType::MEM_READ_ONLY, problem.Zmz.getRawSize())
+      QcBuffer(context, CL::Buffer::BufferType::MEM_WRITE_ONLY, problem.Qc.getRawSize()),
+      USBuffer(context, CL::Buffer::BufferType::MEM_READ_ONLY, problem.US.getRawSize()),
+      VSBuffer(context, CL::Buffer::BufferType::MEM_READ_ONLY, problem.VS.getRawSize()),
+      HSBuffer(context, CL::Buffer::BufferType::MEM_READ_ONLY, problem.HS.getRawSize()),
+      QSBuffer(context, CL::Buffer::BufferType::MEM_READ_ONLY, problem.QS.getRawSize()),
+      TSBuffer(context, CL::Buffer::BufferType::MEM_READ_ONLY, problem.TS.getRawSize()),
+      F_XBuffer(context, CL::Buffer::BufferType::MEM_READ_ONLY, problem.F_X.getRawSize()),
+      ZmzBuffer(context, CL::Buffer::BufferType::MEM_READ_ONLY, problem.Zmz.getRawSize())
 {
     try {
         measureTime(platformName + " OpenCL writing inputs ", [&](){
