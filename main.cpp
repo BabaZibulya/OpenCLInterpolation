@@ -5,7 +5,7 @@
 
 int main(int argc, char ** argv) {
 
-    unsigned Pk = 40, Lmz = 100, Mmz = 102, Nmz = 103;
+    unsigned Pk = 10, Lmz = 10, Mmz = 10, Nmz = 10;
     if (argc != 1) {
         if (argc == 5) {
             Pk = std::stol(argv[1]);

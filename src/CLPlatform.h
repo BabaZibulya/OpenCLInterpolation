@@ -1,4 +1,5 @@
 #pragma once
+
 #include <vector>
 #include <string>
 #include <ostream>
@@ -6,10 +7,7 @@
 #include "CLTypes.h"
 
 namespace CL {
-
-
-	class Platform
-	{
+	class Platform {
 	public:
 		/*
 		#define CL_PLATFORM_PROFILE                         0x0900
@@ -31,3 +29,4 @@ namespace CL {
 		const cl_platform_id clHandle;
 	};
 }
+

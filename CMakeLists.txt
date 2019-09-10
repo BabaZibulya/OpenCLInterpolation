@@ -7,6 +7,10 @@ set (CMAKE_CXX_STANDARD 17)
 set(THREADS_PREFER_PTHREAD_FLAG ON)
 
 find_package(Threads REQUIRED)
+find_package(MPI REQUIRED)
+
+# The following definition is required to build C++ with OpenMPI
+add_definitions(-DOMPI_SKIP_MPICXX)
 
 set (PROJECT_SRC "./main.cpp"
                  "./InterpolationUtils.cpp"
@@ -35,6 +39,7 @@ if(MSVC)
 elseif(CMAKE_COMPILER_IS_GNUCC OR CMAKE_COMPILER_IS_GNUCXX)
   # Update if necessary
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wno-long-long -pedantic")
+  include_directories(SYSTEM ${MPI_INCLUDE_PATH})
 endif()
 
 if(MSVC)
@@ -48,3 +53,4 @@ add_executable(${PROJECT_NAME} ${PROJECT_SRC})
 
 target_link_libraries(OpenCLInterpolation OpenCL)
 target_link_libraries(OpenCLInterpolation Threads::Threads)
+target_link_libraries(OpenCLInterpolation ${MPI_C_LIBRARIES})

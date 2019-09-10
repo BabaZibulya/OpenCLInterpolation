@@ -2,6 +2,8 @@
 
 #include <thread>
 
+#include "mpi.h"
+
 #include "CLUtils.h"
 #include "CL.h"
 #include "CLContext.h"
@@ -23,6 +25,16 @@ InterpolationProblem::InterpolationProblem(unsigned Pk, unsigned Lmz, unsigned M
 {
 	size_t size = US.getRawSize() + VS.getRawSize() + HS.getRawSize() + QS.getRawSize() + TS.getRawSize() + Qc.getRawSize() + F_X.getRawSize() + Zmz.getRawSize();
 	CLLog("Allocated ", size / (1024  * 1024), " Mb of data");
+
+    MPI_Init(nullptr, nullptr);
+    MPI_Comm_size(MPI_COMM_WORLD, &worldSize);
+    MPI_Comm_rank(MPI_COMM_WORLD, &worldRank);
+    CLLog("OpenMPI info: world size : ", worldSize, ", world rank : ", worldRank);
+}
+
+InterpolationProblem::~InterpolationProblem()
+{
+    MPI_Finalize();
 }
 
 void InterpolationProblem::solve()

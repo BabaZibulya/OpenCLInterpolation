@@ -14,6 +14,7 @@ class InterpolationProblem
 {
 public:
     InterpolationProblem(unsigned Pk = 40, unsigned Lmz = 100, unsigned Mmz = 102, unsigned Nmz = 103);
+    ~InterpolationProblem();
 	void solve();
     void solve(unsigned chunkSize);
     void checkResults();
@@ -52,6 +53,8 @@ private:
     FourDimContiniousArray<float> US, VS, HS, QS, TS, Qc;
     TwoDimContiniousArray<float> F_X;
     OneDimContiniousArray<float> Zmz;
+
+    int worldSize, worldRank;
 
     std::string platformName;
 };
