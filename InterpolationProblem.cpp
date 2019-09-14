@@ -151,14 +151,17 @@ void InterpolationProblem::solve(unsigned chunkSize)
 
 void InterpolationProblem::checkResults(const FourDimContiniousArray<float>& Qc)
 {
-    //Pk, Lmz, Mmz, Nmz
+    auto Pk = Qc.getDimSizeFirst();
+    auto Lmz = Qc.getDimSizeSecond();
+    auto Mmz = Qc.getDimSizeThird();
+    auto Nmz = Qc.getDimSizeFourth();
 
     double sum = 0.0;
 
-    for(size_t h = 0; h < Qc.getDimSizeFirst(); h++)
-        for(size_t k = 0; k < Qc.getDimSizeSecond(); k++)
-            for(size_t j = 0; j < Qc.getDimSizeThird(); j++)
-                for(size_t i = 0; i < Qc.getDimSizeFourth(); i++) {
+    for(size_t h = 0; h < Pk; h++)
+        for(size_t k = 0; k < Lmz; k++)
+            for(size_t j = 0; j < Mmz; j++)
+                for(size_t i = 0; i < Nmz; i++) {
                     sum += Qc.at(h, k, j, i);
                 }
 
