@@ -44,7 +44,7 @@ void InterpolationProblem::solve()
         unsigned nodeChunkSize = Pk / worldSize;
         if (worldRank == 0) {
             // Server
-            OpenCLSubtask subtask({0, nodeChunkSize}, Lmz, Mmz, Nmz, platforms[1]);
+            OpenCLSubtask subtask({0, nodeChunkSize}, Lmz, Mmz, Nmz, platforms[0]);
             subtask.solve();
             auto& res = subtask.getResult();
 
@@ -86,9 +86,12 @@ void InterpolationProblem::solve()
                 fut.get();
             }
 
-            for (auto& res : results) {
-                checkResults(res);
+            for (unsigned worker = 0; worker < worldSize - 1; worker++) {
+		CLLog("First el = ", results[worker].at(0, 0, 0, 0));
+		CLLog("Worker ", worker + 1, " mean");
+                checkResults(results[worker]);
             }
+	    CLLog("Server mean");
             checkResults(res);
         } else {
             // Workers
@@ -107,6 +110,8 @@ void InterpolationProblem::solve()
                      0,
                      0,
                      MPI_COMM_WORLD);
+	    CLLog("Worker mean");
+	    checkResults(res);
         }
     }
     
@@ -150,10 +155,10 @@ void InterpolationProblem::checkResults(const FourDimContiniousArray<float>& Qc)
 
     double sum = 0.0;
 
-    for(size_t h = 0; h < Pk; h++)
-        for(size_t k = 0; k < Lmz; k++)
-            for(size_t j = 0; j < Mmz; j++)
-                for(size_t i = 0; i < Nmz; i++) {
+    for(size_t h = 0; h < Qc.getDimSizeFirst(); h++)
+        for(size_t k = 0; k < Qc.getDimSizeSecond(); k++)
+            for(size_t j = 0; j < Qc.getDimSizeThird(); j++)
+                for(size_t i = 0; i < Qc.getDimSizeFourth(); i++) {
                     sum += Qc.at(h, k, j, i);
                 }
 

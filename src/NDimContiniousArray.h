@@ -25,11 +25,11 @@ public:
         }
     }
 
-    size_t numberOfElements() {
+    size_t numberOfElements() const {
         return size;
     }
 
-    size_t getRawSize() {
+    size_t getRawSize() const {
         return size * sizeof(T);
     }
 
@@ -62,7 +62,7 @@ public:
             }
     }
 
-    size_t getRawSize() {
+    size_t getRawSize() const {
         return dimSizeFirst * dimSizeSecond * sizeof(T);
     }
 
@@ -117,27 +117,27 @@ public:
         return data[offset];
     }
 
-    size_t getNumberOfElements() {
+    size_t getNumberOfElements() const {
         return numberOfElements;
     }
 
-    size_t getRawSize() {
+    size_t getRawSize() const {
         return numberOfElements * sizeof(float);
     }
 
-    size_t getDimSizeFirst() {
+    size_t getDimSizeFirst() const {
         return dimSizeFirst; 
     }
 
-    size_t getDimSizeSecond() {
+    size_t getDimSizeSecond() const {
         return dimSizeSecond; 
     }
 
-    size_t getDimSizeThird() {
+    size_t getDimSizeThird() const {
         return dimSizeThird; 
     }
 
-    size_t getDimSizeFourth() {
+    size_t getDimSizeFourth() const {
         return dimSizeFourth; 
     }
 
