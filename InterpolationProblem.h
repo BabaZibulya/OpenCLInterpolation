@@ -17,42 +17,9 @@ public:
     ~InterpolationProblem();
 	void solve();
     void solve(unsigned chunkSize);
-    void checkResults();
-private:
-    struct InterpolationData {
-        InterpolationData(
-            InterpolationProblem& problem,
-            const CL::Context& context,
-			CL::Program::Kernel& kernel,
-            CL::CommandQueue& commandQueue,
-            const std::string platformName = "");
-
-        void readData();
-    private:
-        std::string platformName;
-        CL::CommandQueue& commandQueue;
-        InterpolationProblem& problem;
-		CL::Buffer QcBuffer, USBuffer, VSBuffer, HSBuffer, QSBuffer, TSBuffer, F_XBuffer, ZmzBuffer;
-    };
-    struct InterpolationTask {
-        InterpolationTask(const CL::Platform& platform, InterpolationProblem& problem);
-        void solve(unsigned chunkNum, unsigned chunkSize);
-    private:
-        InterpolationProblem& problem;
-		CL::Platform platform;
-        std::vector<CL::Device> devices;
-		CL::Context context;
-		CL::CommandQueue commandQueue;
-        std::string platformName;
-    };
-    friend struct InterpolationTask;
-    friend struct InterpolationData;
+    void checkResults(const FourDimContiniousArray<float>& Qc);
 private:
     unsigned Pk, Lmz, Mmz, Nmz;
-    
-    FourDimContiniousArray<float> US, VS, HS, QS, TS, Qc;
-    TwoDimContiniousArray<float> F_X;
-    OneDimContiniousArray<float> Zmz;
 
     int worldSize, worldRank;
 

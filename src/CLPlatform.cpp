@@ -38,6 +38,11 @@ Platform::PlatformInfo Platform::getPlatformInfo() const
     return ::getPlatformInfo(clHandle);
 }
 
+std::string Platform::getPlatformInfoDetail(unsigned int detailInd)
+{
+    return ::getPlatformInfoDetail(clHandle, detailInd);
+}
+
 std::ostream& CL::operator<< (std::ostream& ostream, const Platform::PlatformInfo& platformInfo)
 {
     ostream << "Platform info: \n"

@@ -4,8 +4,7 @@
 #include "InterpolationProblem.h"
 
 int main(int argc, char ** argv) {
-
-    unsigned Pk = 10, Lmz = 10, Mmz = 10, Nmz = 10;
+    unsigned Pk = 30, Lmz = 30, Mmz = 30, Nmz = 30;
     if (argc != 1) {
         if (argc == 5) {
             Pk = std::stol(argv[1]);

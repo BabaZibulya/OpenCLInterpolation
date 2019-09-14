@@ -1,6 +1,6 @@
 #include "InterpolationProblem.h"
 
-#include <thread>
+#include <future>
 
 #include "mpi.h"
 
@@ -11,21 +11,11 @@
 
 #include "InterpolationUtils.h"
 #include "TimeUtils.h"
+#include "OpenCLSubtask.h"
 
 InterpolationProblem::InterpolationProblem(unsigned Pk, unsigned Lmz, unsigned Mmz, unsigned Nmz) :
-    Pk(Pk), Lmz(Lmz), Mmz(Mmz), Nmz(Nmz), 
-    US(createUS(Pk, Lmz, Mmz, Nmz)),
-    VS(createVS(Pk, Lmz, Mmz, Nmz)),
-    HS(createHS(Pk, Lmz, Mmz, Nmz)),
-    QS(createQS(Pk, Lmz, Mmz, Nmz)),
-    TS(createTS(Pk, Lmz, Mmz, Nmz)),
-    Qc(createQc(Pk, Lmz, Mmz, Nmz)),
-    F_X(createF_X(Mmz, Nmz)),
-    Zmz(createZmz(Nmz))
+    Pk(Pk), Lmz(Lmz), Mmz(Mmz), Nmz(Nmz)
 {
-	size_t size = US.getRawSize() + VS.getRawSize() + HS.getRawSize() + QS.getRawSize() + TS.getRawSize() + Qc.getRawSize() + F_X.getRawSize() + Zmz.getRawSize();
-	CLLog("Allocated ", size / (1024  * 1024), " Mb of data");
-
     MPI_Init(nullptr, nullptr);
     MPI_Comm_size(MPI_COMM_WORLD, &worldSize);
     MPI_Comm_rank(MPI_COMM_WORLD, &worldRank);
@@ -44,11 +34,14 @@ void InterpolationProblem::solve()
 	for (auto& platform : platforms) {
 		CLLog(platform.getPlatformInfo());
 	}
-	InterpolationTask task(platforms[0], *this);
 
-	task.solve(0, Pk);
-
-	checkResults();
+    if (worldSize == 1)
+    {
+        OpenCLSubtask subtask({0, Pk}, Lmz, Mmz, Nmz, platforms[0]);
+        subtask.solve();
+        auto& res = subtask.getResult();
+	    checkResults(res);
+    }
 }
 
 void InterpolationProblem::solve(unsigned chunkSize)
@@ -58,27 +51,32 @@ void InterpolationProblem::solve(unsigned chunkSize)
     for (auto& platform : platforms) {
         CLLog(platform.getPlatformInfo());
     }
-    std::vector<InterpolationTask> tasks;
+    std::vector<OpenCLSubtask> tasks;
+    int start = 0;
+    int end = Pk / platforms.size();
+
     for (auto& platform : platforms) {
-        tasks.push_back(InterpolationTask(platform, *this));
+        tasks.push_back(OpenCLSubtask({start, end}, Lmz, Mmz, Nmz, platform));
+        start = end;
+        end = end + Pk / platforms.size();
     }
 
-    std::vector<std::thread> taskThreads;
-    unsigned chunkNum = 0;
-    // unsigned chunkSize = Pk / 10;
+    std::vector<std::future<void>> futures;
     for (auto& task : tasks) {
-        taskThreads.push_back(std::thread(&InterpolationTask::solve, &task, chunkNum, chunkSize));
-        chunkNum++;
+        auto fut = std::async(std::launch::async, &OpenCLSubtask::solve, &task);
+        futures.emplace_back(std::move(fut));
     }
 
-    for (auto& thread: taskThreads) {
-        thread.join();
+    for (auto& future: futures) {
+        future.get();
     }
 
-    checkResults();
+    for (auto& task : tasks) {
+        checkResults(task.getResult());
+    }
 }
 
-void InterpolationProblem::checkResults()
+void InterpolationProblem::checkResults(const FourDimContiniousArray<float>& Qc)
 {
     //Pk, Lmz, Mmz, Nmz
 
@@ -93,134 +91,4 @@ void InterpolationProblem::checkResults()
 
     
     CLLog("Mean = ", sum / ((double) Pk * Lmz * Mmz * Nmz));
-}
-
-InterpolationProblem::InterpolationTask::InterpolationTask
-    (const CL::Platform& platform, InterpolationProblem& problem)
-        : problem(problem),
-          platform(platform),
-          devices(CL::Device::getAllAvailableCLDevices(platform)),
-          context(platform, devices),
-          commandQueue(context, devices[0]),
-          platformName(platform.getPlatformInfo().name)
-{
-}
-
-void InterpolationProblem::InterpolationTask::solve(unsigned chunkNum, unsigned chunkSize)
-{
-    try {
-		CL::Program program = CL::Program::compileSources(context, devices, {"kernels/interpol.cl"});
-		CL::Program::Kernel kernel = program.createKernel("interpol");
-
-        InterpolationData interpolationData(problem, context, kernel, commandQueue, platformName);
-
-        measureTime(platformName + " OpenCL ", [&]() {
-            if ((chunkSize == 0 && chunkNum == 0) || (chunkSize == problem.Pk && chunkNum == 1)) {
-                CLLog(problem.platformName, " nothing to do");
-            }
-            else if ((chunkSize == 0 && chunkNum == 1) || (chunkSize == problem.Pk && chunkNum == 0)) {
-                commandQueue.enqueueNDRangeKernel(
-                    kernel, 3,
-					CL::CommandQueue::GlobalSize{ {problem.Pk, problem.Lmz, problem.Mmz} });
-            }
-            else {
-                commandQueue.enqueueNDRangeKernel(
-                    kernel, 3,
-					CL::CommandQueue::GlobalSize{ {(chunkNum == 0) ? chunkSize : problem.Pk, problem.Lmz, problem.Mmz} },
-					CL::CommandQueue::Offset{ {(chunkNum == 0) ? 0 : chunkSize, 0, 0} });
-            }
-            commandQueue.finish();
-        });
-
-        interpolationData.readData();
-    }
-    catch (std::exception& e) {
-        CLLog("Got an exception: ", e.what());
-        return;
-    }
-}
-
-InterpolationProblem::InterpolationData::InterpolationData(
-    InterpolationProblem& problem,
-    const CL::Context& context,
-	CL::Program::Kernel& kernel,
-	CL::CommandQueue& commandQueue,
-    const std::string platformName)
-    : platformName(platformName),
-      commandQueue(commandQueue),
-      problem(problem),
-      QcBuffer(context, CL::Buffer::BufferType::MEM_WRITE_ONLY, problem.Qc.getRawSize()),
-      USBuffer(context, CL::Buffer::BufferType::MEM_READ_ONLY, problem.US.getRawSize()),
-      VSBuffer(context, CL::Buffer::BufferType::MEM_READ_ONLY, problem.VS.getRawSize()),
-      HSBuffer(context, CL::Buffer::BufferType::MEM_READ_ONLY, problem.HS.getRawSize()),
-      QSBuffer(context, CL::Buffer::BufferType::MEM_READ_ONLY, problem.QS.getRawSize()),
-      TSBuffer(context, CL::Buffer::BufferType::MEM_READ_ONLY, problem.TS.getRawSize()),
-      F_XBuffer(context, CL::Buffer::BufferType::MEM_READ_ONLY, problem.F_X.getRawSize()),
-      ZmzBuffer(context, CL::Buffer::BufferType::MEM_READ_ONLY, problem.Zmz.getRawSize())
-{
-    try {
-        measureTime(platformName + " OpenCL writing inputs ", [&](){
-            commandQueue.enqueueWriteBuffer(USBuffer, problem.US.getRawSize(), problem.US.getData());
-            commandQueue.enqueueWriteBuffer(VSBuffer, problem.VS.getRawSize(), problem.VS.getData());
-            commandQueue.enqueueWriteBuffer(HSBuffer, problem.HS.getRawSize(), problem.HS.getData());
-            commandQueue.enqueueWriteBuffer(QSBuffer, problem.QS.getRawSize(), problem.QS.getData());
-            commandQueue.enqueueWriteBuffer(TSBuffer, problem.TS.getRawSize(), problem.TS.getData());
-            commandQueue.enqueueWriteBuffer(F_XBuffer, problem.F_X.getRawSize(), problem.F_X.getData());
-            commandQueue.enqueueWriteBuffer(ZmzBuffer, problem.Zmz.getRawSize(), problem.Zmz.getData());
-        });
-
-        /*
-            __global float *US,
-            __global float *VS,
-            __global float *HS,
-            __global float *QS,
-            __global float *TS,
-            __global float *F_x,
-            __global float *Zmz,
-            __global float *Qc,
-            const unsigned int Pk,
-            const unsigned int Lmz,
-            const unsigned int Mmz,
-            const unsigned int Nmz
-        */
-
-        kernel.setKernelArg(0, USBuffer);
-        kernel.setKernelArg(1, VSBuffer);
-        kernel.setKernelArg(2, HSBuffer);
-        kernel.setKernelArg(3, QSBuffer);
-        kernel.setKernelArg(4, TSBuffer);
-        kernel.setKernelArg(5, F_XBuffer);
-        kernel.setKernelArg(6, ZmzBuffer);
-        kernel.setKernelArg(7, QcBuffer);
-        kernel.setKernelArg(8, problem.Pk);
-        kernel.setKernelArg(9, problem.Lmz);
-        kernel.setKernelArg(10, problem.Mmz);
-        kernel.setKernelArg(11, problem.Nmz);
-    }
-    catch (std::exception& e) {
-        CLLog("Got an exception: ", e.what());
-        return;
-    }
-}
-
-void InterpolationProblem::InterpolationData::readData()
-{
-    FourDimContiniousArray<float> result(problem.Pk, problem.Lmz, problem.Mmz, problem.Nmz);
-    measureTime(platformName + " OpenCL reading results ", [&](){
-        commandQueue.enqueueReadBuffer(QcBuffer, result.getRawSize(), result.getData());
-    });
-
-    // Temp hack
-    // TODO load with offsets
-    for (size_t i = 0; i < problem.Pk; ++i) {
-        for (size_t j = 0; j < problem.Lmz; ++j) {
-            for (size_t k = 0; k < problem.Mmz; ++k) {
-                for (size_t l = 0; l < problem.Nmz; ++l) {
-                    if (result.at(i, j, k, l) != 0.f) {
-                        problem.Qc.at(i, j, k, l) = result.at(i, j, k, l);
-                    }
-                }
-            }
-        }
-    }
 }

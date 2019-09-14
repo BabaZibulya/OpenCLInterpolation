@@ -86,6 +86,66 @@ FourDimContiniousArray<float> createQc(unsigned Pk, unsigned Lmz, unsigned Mmz, 
     return Qc;
 }
 
+FourDimContiniousArray<float> createUS(const Interval& pkInterval, unsigned Lmz, unsigned Mmz, unsigned Nmz)
+{
+    FourDimContiniousArray<float> US(pkInterval.right - pkInterval.left, Lmz, Mmz, Nmz);
+    US.fill([pkLeft = pkInterval.left](unsigned h, unsigned k, unsigned j, unsigned i)
+    {
+        return 1+sin((float)i*j+i-k-(h + pkLeft));
+    });
+    return US;
+}
+
+FourDimContiniousArray<float> createVS(const Interval& pkInterval, unsigned Lmz, unsigned Mmz, unsigned Nmz)
+{
+    FourDimContiniousArray<float> VS(pkInterval.right - pkInterval.left, Lmz, Mmz, Nmz);
+    VS.fill([pkLeft = pkInterval.left](unsigned h, unsigned k, unsigned j, unsigned i)
+    {
+        return 2+cos((float)3*i*(h + pkLeft)-j+(h + pkLeft)*k);
+    });
+    return VS;
+}
+
+FourDimContiniousArray<float> createHS(const Interval& pkInterval, unsigned Lmz, unsigned Mmz, unsigned Nmz)
+{
+    FourDimContiniousArray<float> HS(pkInterval.right - pkInterval.left, Lmz, Mmz, Nmz);
+    HS.fill([pkLeft = pkInterval.left](unsigned h, unsigned k, unsigned j, unsigned i)
+    {
+        return 3+sin((float)2*i*k+j*(h + pkLeft));
+    });
+    return HS;
+}
+
+FourDimContiniousArray<float> createQS(const Interval& pkInterval, unsigned Lmz, unsigned Mmz, unsigned Nmz)
+{
+    FourDimContiniousArray<float> QS(pkInterval.right - pkInterval.left, Lmz, Mmz, Nmz);
+    QS.fill([pkLeft = pkInterval.left](unsigned h, unsigned k, unsigned j, unsigned i)
+    {
+        return 4+cos((float)i+j+k+(pkLeft+h)+10);
+    });
+    return QS;
+}
+
+FourDimContiniousArray<float> createTS(const Interval& pkInterval, unsigned Lmz, unsigned Mmz, unsigned Nmz)
+{
+    FourDimContiniousArray<float> TS(pkInterval.right - pkInterval.left, Lmz, Mmz, Nmz);
+    TS.fill([pkLeft = pkInterval.left](unsigned h, unsigned k, unsigned j, unsigned i)
+    {
+        return 5+sin((float)(j+i)*k-(pkLeft + h));
+    });
+    return TS;
+}
+
+FourDimContiniousArray<float> createQc(const Interval& pkInterval, unsigned Lmz, unsigned Mmz, unsigned Nmz)
+{
+    FourDimContiniousArray<float> Qc(pkInterval.right - pkInterval.left, Lmz, Mmz, Nmz);
+    Qc.fill([](unsigned, unsigned, unsigned, unsigned)
+    {
+        return 0.f;
+    });
+    return Qc;
+}
+
 TwoDimContiniousArray<float> createF_X(unsigned Mmz, unsigned Nmz)
 {
     TwoDimContiniousArray<float> F_X(Mmz, Nmz);

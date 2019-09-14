@@ -3,6 +3,10 @@
 #include <functional>
 #include <memory>
 
+struct Interval {
+    unsigned left, right;
+};
+
 template<typename T>
 class OneDimContiniousArray
 {
@@ -93,6 +97,19 @@ public:
         size_t dimThird,
         size_t dimFourth
     ) {
+        size_t offset = dimFirst + dimSizeFirst * dimSecond +
+            dimSizeFirst * dimSizeSecond * dimThird +
+            dimSizeFirst * dimSizeSecond * dimSizeThird * dimFourth;
+        
+        return data[offset];
+    }
+
+    const T& at(
+        size_t dimFirst,
+        size_t dimSecond,
+        size_t dimThird,
+        size_t dimFourth
+    ) const {
         size_t offset = dimFirst + dimSizeFirst * dimSecond +
             dimSizeFirst * dimSizeSecond * dimThird +
             dimSizeFirst * dimSizeSecond * dimSizeThird * dimFourth;

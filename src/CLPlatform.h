@@ -9,13 +9,13 @@
 namespace CL {
 	class Platform {
 	public:
-		/*
-		#define CL_PLATFORM_PROFILE                         0x0900
-		#define CL_PLATFORM_VERSION                         0x0901
-		#define CL_PLATFORM_NAME                            0x0902
-		#define CL_PLATFORM_VENDOR                          0x0903
-		#define CL_PLATFORM_EXTENSIONS                      0x0904
-		*/
+
+		static const int CL_PLATFORM_PROFILE     = 0x0900;
+		static const int CL_PLATFORM_VERSION     = 0x0901;
+		static const int CL_PLATFORM_NAME        = 0x0902;
+		static const int CL_PLATFORM_VENDOR      = 0x0903;
+		static const int CL_PLATFORM_EXTENSIONS  = 0x0904;
+		
 		explicit Platform(cl_platform_id platformId);
 
 		struct PlatformInfo {
