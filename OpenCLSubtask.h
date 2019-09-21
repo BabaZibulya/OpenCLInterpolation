@@ -13,7 +13,11 @@ public:
                   unsigned Lmz,
                   unsigned Mmz,
                   unsigned Nmz,
-                  const CL::Platform& platform);
+                  const CL::Platform& platform,
+                  size_t deviceNum = 0);
+
+    OpenCLSubtask(OpenCLSubtask&&) = default;
+    OpenCLSubtask& operator=(OpenCLSubtask&&) = default;
 
     void solve();
 

@@ -91,6 +91,9 @@ public:
         data = std::make_unique<T[]>(numberOfElements);
     }
 
+    FourDimContiniousArray(FourDimContiniousArray&&) = default;
+    FourDimContiniousArray& operator=(FourDimContiniousArray&&) = default;
+
     T& at(
         size_t dimFirst,
         size_t dimSecond,

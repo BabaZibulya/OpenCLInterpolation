@@ -44,9 +44,23 @@ void InterpolationProblem::solve()
         unsigned nodeChunkSize = Pk / worldSize;
         if (worldRank == 0) {
             // Server
-            OpenCLSubtask subtask({0, nodeChunkSize}, Lmz, Mmz, Nmz, platforms[0]);
-            subtask.solve();
-            auto& res = subtask.getResult();
+            auto platform = platforms[0];
+            auto numberOfDevices = CL::Device::getAllAvailableCLDevices(platform).size();
+            auto deviceChunk = nodeChunkSize / numberOfDevices;
+            std::vector<OpenCLSubtask> subtasks;
+            std::vector<std::future<void>> subtaskFinishFuture;
+            for (size_t i = 0; i < numberOfDevices; ++i) {
+                subtasks.emplace_back(OpenCLSubtask({deviceChunk * i, deviceChunk * (i + 1)}, Lmz, Mmz, Nmz, platform, i));
+                auto& subtask = subtasks[i];
+                subtaskFinishFuture.emplace_back(std::async(std::launch::async,
+                                                 [&subtask]() mutable { subtask.solve(); } ));
+            }
+            for (auto& fut : subtaskFinishFuture) {
+                fut.get();
+            }
+            // OpenCLSubtask subtask({deviceChunk * i, deviceChunk * (i + 1)}, Lmz, Mmz, Nmz, platform);
+            // subtask.solve();
+            auto& res = subtasks[0].getResult();
 
             std::vector<std::future<void>> futures;
             std::vector<FourDimContiniousArray<float>> results;
@@ -87,12 +101,15 @@ void InterpolationProblem::solve()
             }
 
             for (unsigned worker = 0; worker < worldSize - 1; worker++) {
-		CLLog("First el = ", results[worker].at(0, 0, 0, 0));
-		CLLog("Worker ", worker + 1, " mean");
+		        CLLog("First el = ", results[worker].at(0, 0, 0, 0));
+		        CLLog("Worker ", worker + 1, " mean");
                 checkResults(results[worker]);
             }
-	    CLLog("Server mean");
-            checkResults(res);
+	        CLLog("Server means");
+            for (size_t i = 0; i < numberOfDevices; ++i) {
+                checkResults(subtasks[i].getResult());
+            }
+            // checkResults(res);
         } else {
             // Workers
             unsigned left = nodeChunkSize * worldRank;

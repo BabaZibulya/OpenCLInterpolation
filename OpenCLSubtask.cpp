@@ -11,7 +11,8 @@ OpenCLSubtask::OpenCLSubtask(const Interval& pkInterval,
                              unsigned Lmz,
                              unsigned Mmz,
                              unsigned Nmz,
-                             const CL::Platform& platform)
+                             const CL::Platform& platform,
+                             size_t deviceNum)
     : pkInterval(pkInterval),
       Lmz(Lmz),
       Mmz(Mmz),
@@ -27,7 +28,7 @@ OpenCLSubtask::OpenCLSubtask(const Interval& pkInterval,
       Zmz(createZmz(Nmz)),
 
       platform(platform),
-      device(CL::Device::getAllAvailableCLDevices(platform)[0]), // Taking only the first one
+      device(CL::Device::getAllAvailableCLDevices(platform)[deviceNum]),
       context(platform, { device }),
       commandQueue(context, device)
 {
