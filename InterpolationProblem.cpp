@@ -66,7 +66,7 @@ void InterpolationProblem::solve()
             std::vector<FourDimContiniousArray<float>> results;
             for (int otherNode = 1; otherNode < worldSize; ++otherNode)
             {
-                results.emplace_back(res.getDimSizeFirst(),
+                results.emplace_back(res.getDimSizeFirst() * numberOfDevices,
                                      res.getDimSizeSecond(),
                                      res.getDimSizeThird(),
                                      res.getDimSizeFourth());
