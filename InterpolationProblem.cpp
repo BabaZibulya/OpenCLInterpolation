@@ -2,7 +2,7 @@
 
 #include <future>
 
-#include "mpi.h"
+//#include "mpi.h"
 
 #include "CLUtils.h"
 #include "CL.h"
@@ -16,15 +16,15 @@
 InterpolationProblem::InterpolationProblem(unsigned Pk, unsigned Lmz, unsigned Mmz, unsigned Nmz) :
     Pk(Pk), Lmz(Lmz), Mmz(Mmz), Nmz(Nmz)
 {
-    MPI_Init(nullptr, nullptr);
-    MPI_Comm_size(MPI_COMM_WORLD, &worldSize);
-    MPI_Comm_rank(MPI_COMM_WORLD, &worldRank);
+    //MPI_Init(nullptr, nullptr);
+    //MPI_Comm_size(MPI_COMM_WORLD, &worldSize);
+    //MPI_Comm_rank(MPI_COMM_WORLD, &worldRank);
     CLLog("OpenMPI info: world size : ", worldSize, ", world rank : ", worldRank);
 }
 
 InterpolationProblem::~InterpolationProblem()
 {
-    MPI_Finalize();
+    //MPI_Finalize();
 }
 
 void InterpolationProblem::solve()
@@ -74,24 +74,24 @@ void InterpolationProblem::solve()
             }
             for (int otherNode = 1; otherNode < worldSize; ++otherNode)
             {
-                auto fut = std::async(std::launch::async,
-                                      [resBuf = results[otherNode - 1].getData(),
-                                       numberOfEl = results[otherNode - 1].getNumberOfElements()](unsigned otherNode) {
-                                          MEASURE_TIME("Time to receive ",
-                                          CLLog("Receiving data from node = ", otherNode,
-                                                " rest buf size = ", numberOfEl);
-                                          MPI_Recv(resBuf,
-                                                   numberOfEl, // All chuncks are same size
-                                                   MPI_FLOAT,
-                                                   otherNode,
-                                                   0,
-                                                   MPI_COMM_WORLD,
-                                                   MPI_STATUS_IGNORE);
-                                          CLLog("Received data from node = ", otherNode);
-                                          );
-                                      },
-                                      otherNode);
-                futures.emplace_back(std::move(fut));
+                //auto fut = std::async(std::launch::async,
+                //                      [resBuf = results[otherNode - 1].getData(),
+                //                       numberOfEl = results[otherNode - 1].getNumberOfElements()](unsigned otherNode) {
+                //                          MEASURE_TIME("Time to receive ",
+                //                          CLLog("Receiving data from node = ", otherNode,
+                //                                " rest buf size = ", numberOfEl);
+                //                          MPI_Recv(resBuf,
+                //                                   numberOfEl, // All chuncks are same size
+                //                                   MPI_FLOAT,
+                //                                   otherNode,
+                //                                   0,
+                //                                   MPI_COMM_WORLD,
+                //                                   MPI_STATUS_IGNORE);
+                //                          CLLog("Received data from node = ", otherNode);
+                //                          );
+                //                      },
+                //                      otherNode);
+                //futures.emplace_back(std::move(fut));
             }
 
 
@@ -121,14 +121,14 @@ void InterpolationProblem::solve()
             auto& res = subtask.getResult();
 
             CLLog("Worker = ", worldRank, " rest buf size = ", res.getNumberOfElements());
-            MPI_Send(res.getData(),
-                     res.getNumberOfElements(),
-                     MPI_FLOAT,
-                     0,
-                     0,
-                     MPI_COMM_WORLD);
-	    CLLog("Worker mean");
-	    checkResults(res);
+            //MPI_Send(res.getData(),
+            //         res.getNumberOfElements(),
+            //         MPI_FLOAT,
+            //         0,
+            //         0,
+            //         MPI_COMM_WORLD);
+            CLLog("Worker mean");
+            checkResults(res);
         }
     }
     

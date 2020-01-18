@@ -1,13 +1,12 @@
-cmake_minimum_required(VERSION 3.10)
+cmake_minimum_required(VERSION 3.5)
 
 project(OpenCLInterpolation)
 
-set (CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 11)
 
 set(THREADS_PREFER_PTHREAD_FLAG ON)
 
 find_package(Threads REQUIRED)
-find_package(MPI REQUIRED)
 
 # The following definition is required to build C++ with OpenMPI
 add_definitions(-DOMPI_SKIP_MPICXX)
@@ -30,6 +29,7 @@ set (PROJECT_SRC "./main.cpp"
                  )
 
 include_directories("./src")
+include_directories("./src/utils")
 
 if(MSVC)
   # Force to always compile with W4
@@ -55,4 +55,3 @@ add_executable(${PROJECT_NAME} ${PROJECT_SRC})
 
 target_link_libraries(OpenCLInterpolation OpenCL)
 target_link_libraries(OpenCLInterpolation Threads::Threads)
-target_link_libraries(OpenCLInterpolation ${MPI_C_LIBRARIES})

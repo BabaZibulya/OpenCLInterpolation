@@ -3,6 +3,8 @@
 #include <functional>
 #include <memory>
 
+#include "MakeUnique.h"
+
 struct Interval {
     unsigned left, right;
 };
@@ -12,7 +14,7 @@ class OneDimContiniousArray
 {
 public:
     OneDimContiniousArray(size_t size) : size(size) {
-        data = std::make_unique<T[]>(size);
+        data = utils::make_unique<T[]>(size);
     }
 
     T& at(size_t ind) {
@@ -48,7 +50,7 @@ public:
     TwoDimContiniousArray(size_t dimSizeFirst, size_t dimSizeSecond) :
         dimSizeFirst(dimSizeFirst), dimSizeSecond(dimSizeSecond)
     {
-        data = std::make_unique<T[]>(dimSizeFirst * dimSizeSecond);
+        data = utils::make_unique<T[]>(dimSizeFirst * dimSizeSecond);
     }
 
     T& at(size_t indFirst, size_t indSecond) {
@@ -88,7 +90,7 @@ public:
                            dimSizeFourth(dimSizeFourth)
     {
         numberOfElements = dimSizeFirst * dimSizeSecond * dimSizeThird * dimSizeFourth;
-        data = std::make_unique<T[]>(numberOfElements);
+        data = utils::make_unique<T[]>(numberOfElements);
     }
 
     FourDimContiniousArray(FourDimContiniousArray&&) = default;

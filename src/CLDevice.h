@@ -36,7 +36,7 @@ namespace CL {
 			const Platform& platform,
 			DeviceType deviceType = DeviceType::All);
 
-		template<typename OutputType, typename = std::enable_if_t<std::is_scalar<OutputType>::value>>
+		template<typename OutputType, typename = std::enable_if<std::is_scalar<OutputType>::type::value>>
 		OutputType getDeviceInfoDetail(unsigned int detailInd) const
 		{
 			OutputType result;

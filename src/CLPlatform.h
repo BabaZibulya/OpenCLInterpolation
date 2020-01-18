@@ -21,12 +21,14 @@ namespace CL {
 		struct PlatformInfo {
 			const std::string profile, version, name, vendor, extensions;
 			PlatformInfo() = delete;
-			friend std::ostream& operator<< (std::ostream& ostream, const PlatformInfo& platformInfo);
+			friend ::std::ostream& operator<< (std::ostream& ostream, const PlatformInfo& platformInfo);
 		};
 		PlatformInfo getPlatformInfo() const;
 		std::string getPlatformInfoDetail(unsigned int detailInd);
 
 		const cl_platform_id clHandle;
 	};
+
+    std::ostream& operator<< (std::ostream& ostream, const Platform::PlatformInfo& platformInfo);
 }
 

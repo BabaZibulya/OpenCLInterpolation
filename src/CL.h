@@ -18,8 +18,11 @@ namespace CL {
 
 #ifdef CL_DEBUG
 #define CL(command) \
-    if (auto result = command; result != CL_SUCCESS) {\
-        CL::logError(result);\
+    { \
+        auto result = command; \
+        if (result != CL_SUCCESS) { \
+            CL::logError(result); \
+        } \
     }
 #else
 #define CL(command) command
