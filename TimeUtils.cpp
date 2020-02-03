@@ -11,8 +11,8 @@ void measureTime(const std::string& message, const std::function<void()>& f)
     f();
 
     end = std::chrono::system_clock::now();
-    int elapsed_milliseconds = std::chrono::duration_cast<std::chrono::milliseconds>
+    int elapsed_microseconds = std::chrono::duration_cast<std::chrono::microseconds>
                              (end-start).count();
  
-    std::cout << message << " - execution time: " << elapsed_milliseconds << "ms\n";
+    std::cout << message << " - execution time: " << elapsed_microseconds << " microseconds\n";
 }

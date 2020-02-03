@@ -14,12 +14,12 @@ Program::Program(
     const std::vector<Device>& devices,
     const std::vector<std::string>& sources)
 {
-    std::vector<const char*> cSources(sources.size());
-    std::transform(sources.cbegin(), sources.cend(), cSources.begin(), [](const std::string& source) { return source.c_str(); });
+    std::vector<const unsigned char*> cSources(sources.size());
+    std::transform(sources.cbegin(), sources.cend(), cSources.begin(), [](const std::string& source) { return (const unsigned char*)source.c_str(); });
     std::vector<size_t> lengths(sources.size());
     std::transform(sources.cbegin(), sources.cend(), lengths.begin(), [](const std::string& source) { return source.length(); });
-    cl_int errCode;
-    program = clCreateProgramWithSource(context.clHandle, cSources.size(), &cSources[0], &lengths[0], &errCode);
+    cl_int errCode, binStatus;
+    program = clCreateProgramWithBinary(context.clHandle, devices.size(), &devicesToDeviceIds(devices)[0],&lengths[0], &cSources[0], &errCode, &binStatus);
     checkForCLError(errCode);
 
     auto result = clBuildProgram(program, devices.size(), &devicesToDeviceIds(devices)[0], "-w", nullptr, nullptr);

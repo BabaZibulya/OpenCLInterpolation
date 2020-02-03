@@ -2,7 +2,10 @@
 
 set -e
 
-TARGET=hw && DEVICE=xilinx_u200_xdma_201830_1 && xocc -c  --target $TARGET --platform $DEVICE interpol.cl -o interpol.xo
+TARGET=sw_emu
+DEVICE=xilinx_u200_xdma_201830_1
+KERNEL=interpol
 
-TARGET=hw && DEVICE=xilinx_u200_xdma_201830_1 && xocc -l  --target $TARGET --platform $DEVICE interpol.xo -o interpol.xclbin
+xocc -c  --target $TARGET --platform $DEVICE ${KERNEL}.cl -o $TARGET/${KERNEL}.xo
+xocc -l  --target $TARGET --platform $DEVICE $TARGET/${KERNEL}.xo -o $TARGET/${KERNEL}.xclbin
 

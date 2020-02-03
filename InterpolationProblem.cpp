@@ -2,8 +2,6 @@
 
 #include <future>
 
-//#include "mpi.h"
-
 #include "CLUtils.h"
 #include "CL.h"
 #include "CLContext.h"
@@ -16,10 +14,7 @@
 InterpolationProblem::InterpolationProblem(unsigned Pk, unsigned Lmz, unsigned Mmz, unsigned Nmz) :
     Pk(Pk), Lmz(Lmz), Mmz(Mmz), Nmz(Nmz)
 {
-    //MPI_Init(nullptr, nullptr);
-    //MPI_Comm_size(MPI_COMM_WORLD, &worldSize);
-    //MPI_Comm_rank(MPI_COMM_WORLD, &worldRank);
-    CLLog("OpenMPI info: world size : ", worldSize, ", world rank : ", worldRank);
+    worldSize = 1;
 }
 
 InterpolationProblem::~InterpolationProblem()
@@ -36,6 +31,7 @@ void InterpolationProblem::solve()
 	}
 
     if (worldSize == 1) {
+        CLLog("Solving with Pk = ", Pk);
         OpenCLSubtask subtask({0, Pk}, Lmz, Mmz, Nmz, platforms[0]);
         subtask.solve();
         auto& res = subtask.getResult();

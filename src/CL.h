@@ -2,6 +2,7 @@
 #include <OpenCL/opencl.h>
 #else
 #include <CL/cl.h>
+#include <CL/cl_ext_xilinx.h>
 #endif
 
 #include <iostream>

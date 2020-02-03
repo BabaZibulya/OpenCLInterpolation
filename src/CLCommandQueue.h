@@ -52,6 +52,7 @@ namespace CL {
 			const GlobalSize& globalSize,
 			const Offset& offset
 		);
+		void enqueueTask(const Program::Kernel& kernel);
 
 		void finish();
 	public:

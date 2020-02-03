@@ -13,11 +13,7 @@ CommandQueue::CommandQueue(CommandQueue&& commandQueue)
 CommandQueue::CommandQueue(const Context& context, const Device& device)
 {
     cl_int errCode;
-#ifdef CL_VERSION_2_0
-    clHandle = clCreateCommandQueueWithProperties(context.clHandle, device.deviceId, 0, &errCode);
-#else
-    clHandle = clCreateCommandQueue(context.clHandle, device.deviceId, 0, &errCode);
-#endif
+    clHandle = clCreateCommandQueue(context.clHandle, device.deviceId,0 & CL_QUEUE_OUT_OF_ORDER_EXEC_MODE_ENABLE, &errCode);
     checkForCLError(errCode);
 }
 
@@ -96,6 +92,10 @@ void CommandQueue::enqueueNDRangeKernel(
     CL(clEnqueueNDRangeKernel(clHandle, kernel.kernel, workDim, &offset.get()[0], &globalSize.get()[0], nullptr, 0, nullptr, nullptr));
 }
 
+void CommandQueue::enqueueTask(const Program::Kernel& kernel)
+{
+    CL(clEnqueueTask(clHandle, kernel.kernel, 0, nullptr, nullptr));
+}
 void CommandQueue::finish()
 {
     clFinish(clHandle);

@@ -25,6 +25,9 @@ __kernel void interpol(
         return;
     }
 
+#ifdef __xilinx__
+    __attribute__((xcl_pipeline_loop))
+#endif
     for (int i = 0; i < Nmz; i++) {
         const unsigned int ind = h + Pk * k + Pk * Lmz * j + Pk * Lmz * Mmz * i;
         float a = (WZZ + US[ind] / 0.321f) * Rs * VS[ind];

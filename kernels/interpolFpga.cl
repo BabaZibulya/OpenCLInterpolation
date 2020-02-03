@@ -29,9 +29,13 @@ __kernel void interpol(
     const unsigned int Nmz
 )
 {
+    __attribute__((xcl_pipeline_loop))
     for (int h = 0; h < Pk; h++) {
+        __attribute__((xcl_pipeline_loop))
         for (int k = 0; k < Lmz; k++) {
+            __attribute__((xcl_pipeline_loop))
             for (int j = 0; j < Mmz; j++) {
+                    __attribute__((xcl_pipeline_loop))
                     for (int i = 0; i < Nmz; i++) {
                         const unsigned int ind = getIndex4D(i, j, k, h, Pk, Lmz, Mmz, Nmz);
                         float a = (WZZ + US[ind] / 0.321f) * Rs * VS[ind];

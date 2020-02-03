@@ -30,6 +30,7 @@ set (PROJECT_SRC "./main.cpp"
 
 include_directories("./src")
 include_directories("./src/utils")
+include_directories("/opt/xilinx/xrt/include")
 
 if(MSVC)
   # Force to always compile with W4

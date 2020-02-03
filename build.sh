@@ -6,5 +6,5 @@ if [ ! -d "build" ]; then
 fi
 
 cd build
-cmake -G 'Unix Makefiles' -DCMAKE_BUILD_TYPE=Debug ..
+cmake -G 'Unix Makefiles' -DCMAKE_BUILD_TYPE=Release ..
 make -j8
