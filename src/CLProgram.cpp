@@ -12,15 +12,26 @@ using namespace CL;
 Program::Program(
     const Context& context,
     const std::vector<Device>& devices,
-    const std::vector<std::string>& sources)
+    const std::vector<std::string>& inputFiles,
+    ProgramType programType)
 {
-    std::vector<const unsigned char*> cSources(sources.size());
-    std::transform(sources.cbegin(), sources.cend(), cSources.begin(), [](const std::string& source) { return (const unsigned char*)source.c_str(); });
-    std::vector<size_t> lengths(sources.size());
-    std::transform(sources.cbegin(), sources.cend(), lengths.begin(), [](const std::string& source) { return source.length(); });
-    cl_int errCode, binStatus;
-    program = clCreateProgramWithBinary(context.clHandle, devices.size(), &devicesToDeviceIds(devices)[0],&lengths[0], &cSources[0], &errCode, &binStatus);
-    checkForCLError(errCode);
+    if (programType == ProgramType::BINARY) {
+        std::vector<const unsigned char*> cSources(inputFiles.size());
+        std::transform(inputFiles.cbegin(), inputFiles.cend(), cSources.begin(), [](const std::string& source) { return (const unsigned char*)source.c_str(); });
+        std::vector<size_t> lengths(inputFiles.size());
+        std::transform(inputFiles.cbegin(), inputFiles.cend(), lengths.begin(), [](const std::string& source) { return source.length(); });
+        cl_int errCode, binStatus;
+        program = clCreateProgramWithBinary(context.clHandle, devices.size(), &devicesToDeviceIds(devices)[0], &lengths[0], &cSources[0], &errCode, &binStatus);
+        checkForCLError(errCode);
+    } else {
+        std::vector<const char*> cSources(inputFiles.size());
+        std::transform(inputFiles.cbegin(), inputFiles.cend(), cSources.begin(), [](const std::string& source) { return source.c_str(); });
+        std::vector<size_t> lengths(inputFiles.size());
+        std::transform(inputFiles.cbegin(), inputFiles.cend(), lengths.begin(), [](const std::string& source) { return source.length(); });
+        cl_int errCode;
+        program = clCreateProgramWithSource(context.clHandle, cSources.size(), &cSources[0], &lengths[0], &errCode);
+        checkForCLError(errCode);
+    }
 
     auto result = clBuildProgram(program, devices.size(), &devicesToDeviceIds(devices)[0], "-w", nullptr, nullptr);
     if (result != CL_SUCCESS) {
@@ -44,13 +55,14 @@ Program::~Program()
     }
 }
 
-Program Program::compileSources(
+Program Program::createProgram(
     const Context& context,
     const std::vector<Device>& devices,
-    const std::vector<std::string>& pathes)
+    const std::vector<std::string>& inputFiles,
+    ProgramType programType)
 {
-    std::vector<std::string> sources(pathes.size());
-    std::transform(pathes.cbegin(), pathes.cend(), sources.begin(), [](const std::string& path) {
+    std::vector<std::string> sources(inputFiles.size());
+    std::transform(inputFiles.cbegin(), inputFiles.cend(), sources.begin(), [](const std::string& path) {
         std::ifstream file(path);
         if (file.is_open()) {
             std::string source((std::istreambuf_iterator<char>(file)),
@@ -61,7 +73,7 @@ Program Program::compileSources(
             throw std::runtime_error("File " + path + " could not be opened");
         }
     });
-    return Program(context, devices, sources);
+    return Program(context, devices, sources, programType);
 }
 
 std::string Program::compilationLog(const Device& device)

@@ -41,11 +41,11 @@ void InterpolationProblem::solve()
         if (worldRank == 0) {
             // Server
             auto platform = platforms[0];
-            auto numberOfDevices = CL::Device::getAllAvailableCLDevices(platform).size();
-            auto deviceChunk = nodeChunkSize / numberOfDevices;
+            unsigned numberOfDevices = CL::Device::getAllAvailableCLDevices(platform).size();
+            unsigned deviceChunk = nodeChunkSize / numberOfDevices;
             std::vector<OpenCLSubtask> subtasks;
             std::vector<std::future<void>> subtaskFinishFuture;
-            for (size_t i = 0; i < numberOfDevices; ++i) {
+            for (unsigned i = 0; i < numberOfDevices; ++i) {
                 subtasks.emplace_back(OpenCLSubtask({deviceChunk * i, deviceChunk * (i + 1)}, Lmz, Mmz, Nmz, platform, i));
                 auto& subtask = subtasks[i];
                 subtaskFinishFuture.emplace_back(std::async(std::launch::async,
@@ -138,8 +138,8 @@ void InterpolationProblem::solve(unsigned chunkSize)
         CLLog(platform.getPlatformInfo());
     }
     std::vector<OpenCLSubtask> tasks;
-    int start = 0;
-    int end = Pk / platforms.size();
+    unsigned start = 0;
+    unsigned end = Pk / platforms.size();
 
     for (auto& platform : platforms) {
         tasks.push_back(OpenCLSubtask({start, end}, Lmz, Mmz, Nmz, platform));
