@@ -35,7 +35,7 @@ void InterpolationProblem::solve()
         OpenCLSubtask subtask({0, Pk}, Lmz, Mmz, Nmz, platforms[0]);
         subtask.solve();
         auto& res = subtask.getResult();
-	    checkResults(res);
+        checkResults(res);
     } else {
         unsigned nodeChunkSize = Pk / worldSize;
         if (worldRank == 0) {

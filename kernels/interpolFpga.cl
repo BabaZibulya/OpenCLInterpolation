@@ -44,6 +44,7 @@ __kernel void interpol(
         if (i >= Nmz) {
             break;
         }
+        const unsigned int ind = h + Pk * k + Pk * Lmz * j + Pk * Lmz * Mmz * i;
         localUS[i] = US[ind];
         localVS[i] = VS[ind];
         localTS[i] = TS[ind];

@@ -67,7 +67,7 @@ void OpenCLSubtask::solve()
                 CL::CommandQueue::GlobalSize{ {pkInterval.right - pkInterval.left,
                                                Lmz,
                                                Mmz} },
-		CL::CommandQueue::LocalSize{{16, 4, 4}});
+                CL::CommandQueue::LocalSize{{16, 4, 4}});
             commandQueue.finish();
         });
 
