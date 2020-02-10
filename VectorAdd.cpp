@@ -12,6 +12,9 @@
 #include "CLUtils.h"
 
 VectorAdd::VectorAdd(size_t size): size(size) {
+    CLLog("\n**************************\n");
+    CLLog("Solving vec add with n = ", size);
+    CLLog("Data size = ", sizeof(float) * size * 2);
 }
 
 void VectorAdd::solve() {
@@ -26,8 +29,8 @@ void VectorAdd::solve() {
     CL::Context context(platform, { dev });
     CL::CommandQueue commandQueue(context, dev);
 
-    CL::Program program = CL::Program::createProgram(context, { dev }, { "C:\\Users\\Bondarenko-PC\\Documents\\Projects\\OpenCLInterpolation\\kernels\\vecAdd.cl" }, CL::Program::ProgramType::SOURCE);
-    //CL::Program program = CL::Program::createProgram(context, { dev }, { "kernels/hw/vecAdd.xclbin" }, CL::Program::ProgramType::BINARY);
+    //CL::Program program = CL::Program::createProgram(context, { dev }, { "C:\\Users\\Bondarenko-PC\\Documents\\Projects\\OpenCLInterpolation\\kernels\\vecAdd.cl" }, CL::Program::ProgramType::SOURCE);
+    CL::Program program = CL::Program::createProgram(context, { dev }, { "kernels/hw/vecAddXilinx.xclbin" }, CL::Program::ProgramType::BINARY);
     CL::Program::Kernel kernel = program.createKernel("vecAdd");
 
     std::random_device rd;
@@ -83,9 +86,10 @@ void VectorAdd::solve() {
     }
 
     measureTime(platformName + " OpenCL ", [&]() {
-        commandQueue.enqueueNDRangeKernel(
+        /*commandQueue.enqueueNDRangeKernel(
             kernel, 1,
-            CL::CommandQueue::GlobalSize{ {size} });
+            CL::CommandQueue::GlobalSize{ {size} });*/
+        commandQueue.enqueueTask(kernel);
         commandQueue.finish();
     });
 

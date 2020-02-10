@@ -24,8 +24,10 @@ int main(int argc, char ** argv) {
     //InterpolationProblem interpolationProblem(Pk, Lmz, Mmz, Nmz);
     //interpolationProblem.solve();
 
-    VectorAdd problem(10000);
-    problem.solve();
+    for (size_t n = 1; n < 10; n++) {
+        VectorAdd problem(4096 * n);
+        problem.solve();
+    }
 
     return 0;
 }
