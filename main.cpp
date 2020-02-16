@@ -36,9 +36,9 @@ int main(int argc, char ** argv) {
 
     
 
-    Convolution conv("C:\\Users\\Bondarenko-PC\\Documents\\Projects\\OpenCLInterpolation\\img\\airplane.bmp");
+    //Convolution conv("C:\\Users\\Bondarenko-PC\\Documents\\Projects\\OpenCLInterpolation\\img\\airplane.bmp");
     //Convolution conv("C:\\Users\\Bondarenko-PC\\Documents\\Projects\\OpenCLInterpolation\\img\\lenna.bmp");
-    //Convolution conv("img/lena_gray.bmp");
+    Convolution conv("img/lena_gray.bmp");
     conv.solve();
 
     getchar();

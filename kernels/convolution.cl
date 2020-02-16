@@ -1,4 +1,9 @@
 
+// For some reason Xilinx gives runtime error when std clamp is used
+int _clamp(int val, int _min, int _max) {
+    return min(max(val, _min), _max);
+}
+
 int coord(unsigned int i, unsigned int j, unsigned int width, int channel) {
     return 3 * (i + j * width) + channel;
 }
@@ -24,8 +29,8 @@ __kernel void convolution(
         for (int ki = 0; ki < kernel_size; ++ki) {
             int kernel_el = ki + kj * kernel_size;
 
-            int coordI = clamp(i + ki - radius, 0, (int)width);
-            int coordJ = clamp(j + kj - radius, 0, (int)height);
+            int coordI = _clamp(i + ki - radius, 0, (int)width);
+            int coordJ = _clamp(j + kj - radius, 0, (int)height);
 
             resultR += src[coord(coordI, coordJ, width, 0)] * kern[kernel_el];
             resultG += src[coord(coordI, coordJ, width, 1)] * kern[kernel_el];

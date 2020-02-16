@@ -3,6 +3,7 @@
 #include <array>
 #include <vector>
 #include <cassert>
+#include <cstring>
 
 #include "CLLog.h"
 #include "CLContext.h"
@@ -12,7 +13,6 @@
 #include "TimeUtils.h"
 #include "NDimContiniousArray.h"
 #include "CLUtils.h"
-
 
 Convolution::Convolution(const std::string &path) : image(path) {
 }
@@ -29,8 +29,8 @@ void Convolution::solve() {
     CL::Context context(platform, { dev });
     CL::CommandQueue commandQueue(context, dev);
 
-    CL::Program program = CL::Program::createProgram(context, { dev }, { "C:\\Users\\Bondarenko-PC\\Documents\\Projects\\OpenCLInterpolation\\kernels\\convolution.cl" }, CL::Program::ProgramType::SOURCE);
-    //CL::Program program = CL::Program::createProgram(context, { dev }, { "kernels/hw/convolution.xclbin" }, CL::Program::ProgramType::BINARY);
+    //CL::Program program = CL::Program::createProgram(context, { dev }, { "C:\\Users\\Bondarenko-PC\\Documents\\Projects\\OpenCLInterpolation\\kernels\\convolution.cl" }, CL::Program::ProgramType::SOURCE);
+    CL::Program program = CL::Program::createProgram(context, { dev }, { "kernels/hw/convolution.xclbin" }, CL::Program::ProgramType::BINARY);
     CL::Program::Kernel kernel = program.createKernel("convolution");
 
     size_t totalSize = 3 * image.getHeight() * image.getWidth();

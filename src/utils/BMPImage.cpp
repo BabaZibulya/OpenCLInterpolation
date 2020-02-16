@@ -3,6 +3,7 @@
 #include <iostream>
 #include <fstream>
 #include <array>
+#include <cstring>
 
 namespace utils {
     struct BMPImageImpl {
