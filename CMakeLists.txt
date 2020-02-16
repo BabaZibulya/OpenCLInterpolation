@@ -12,12 +12,12 @@ find_package(Threads REQUIRED)
 add_definitions(-DOMPI_SKIP_MPICXX)
 
 set (PROJECT_SRC "./main.cpp"
-                 "./InterpolationUtils.cpp"
-                 "./InterpolationProblem.cpp"
-                 "./TimeUtils.cpp"
-                 "./OpenCLSubtask.cpp"
-                 "./VectorAdd.cpp"
-                 "./InterpolationOpenCLData.cpp"
+                 "./src/problems/InterpolationUtils.cpp"
+                 "./src/problems/InterpolationProblem.cpp"
+                 "./src/problems/OpenCLSubtask.cpp"
+                 "./src/problems/VectorAdd.cpp"
+                 "./src/problems/InterpolationOpenCLData.cpp"
+                 "./src/problems/Convolution.cpp"
                  "./src/CL.cpp"
                  "./src/CLPlatform.cpp"
                  "./src/CLDevice.cpp"
@@ -27,10 +27,13 @@ set (PROJECT_SRC "./main.cpp"
                  "./src/CLUtils.cpp"
                  "./src/CLBuffer.cpp"
                  "./src/CLLog.cpp"
+                 "./src/utils/BMPImage.cpp"
+                 "./src/utils/TimeUtils.cpp"
                  )
 
 include_directories("./src")
 include_directories("./src/utils")
+include_directories("./src/problems")
 include_directories("/opt/xilinx/xrt/include")
 
 if(MSVC)

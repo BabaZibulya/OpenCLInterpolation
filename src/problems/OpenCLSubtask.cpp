@@ -39,7 +39,8 @@ OpenCLSubtask::OpenCLSubtask(const Interval& pkInterval,
 void OpenCLSubtask::solve()
 {
     try {
-        CL::Program program = CL::Program::createProgram(context, {device}, {"kernels/hw/interpol.xclbin"}, CL::Program::ProgramType::BINARY);
+        //CL::Program program = CL::Program::createProgram(context, {device}, {"kernels/hw/interpol.xclbin"}, CL::Program::ProgramType::BINARY);
+        CL::Program program = CL::Program::createProgram(context, { device }, { "C:\\Users\\Bondarenko-PC\\Documents\\Projects\\OpenCLInterpolation\\kernels\\interpol.cl" }, CL::Program::ProgramType::SOURCE);
         CL::Program::Kernel kernel = program.createKernel("interpol");
 
         auto platformName = platform.getPlatformInfoDetail(CL::Platform::CL_PLATFORM_NAME);

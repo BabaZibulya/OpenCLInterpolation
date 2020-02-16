@@ -29,8 +29,8 @@ void VectorAdd::solve() {
     CL::Context context(platform, { dev });
     CL::CommandQueue commandQueue(context, dev);
 
-    //CL::Program program = CL::Program::createProgram(context, { dev }, { "C:\\Users\\Bondarenko-PC\\Documents\\Projects\\OpenCLInterpolation\\kernels\\vecAdd.cl" }, CL::Program::ProgramType::SOURCE);
-    CL::Program program = CL::Program::createProgram(context, { dev }, { "kernels/hw/vecAddXilinx.xclbin" }, CL::Program::ProgramType::BINARY);
+    CL::Program program = CL::Program::createProgram(context, { dev }, { "C:\\Users\\Bondarenko-PC\\Documents\\Projects\\OpenCLInterpolation\\kernels\\vecAdd.cl" }, CL::Program::ProgramType::SOURCE);
+    //CL::Program program = CL::Program::createProgram(context, { dev }, { "kernels/hw/vecAddXilinx.xclbin" }, CL::Program::ProgramType::BINARY);
     CL::Program::Kernel kernel = program.createKernel("vecAdd");
 
     std::random_device rd;
